@@ -100,8 +100,26 @@ export interface VPDAnalysisResult {
   status: 'optimal' | 'acceptable' | 'needs_adjustment';
 }
 
-// Tipos para períodos del día
-export type DayPeriod = 'day' | 'night' | 'full';
+// Tipos para períodos del día - Sistema de bloques temporales
+export type DayPeriod = 'day' | 'night' | 'full' | 'dawn_cold' | 'night_deep' | 'morning' | 'day_active' | 'night_plant';
+
+// Configuración de bloques temporales
+export interface TimeBlock {
+  id: string;
+  name: string;
+  icon: string;
+  description: string;
+  startHour: number;
+  endHour: number;
+  duration: number; // en horas
+  strategy: string;
+  priority: 'temperature' | 'humidity' | 'balance';
+  color: string;
+}
+
+export interface TimeBlockConfig {
+  [key: string]: TimeBlock;
+}
 
 // Tipos para selección de islas
 export type IslandId = 'I1' | 'I2' | 'I3' | 'I4' | 'I5' | 'I6';

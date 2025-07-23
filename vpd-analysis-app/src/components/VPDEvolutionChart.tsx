@@ -10,7 +10,8 @@ import {
   ResponsiveContainer,
   ReferenceLine,
   ComposedChart,
-  Bar
+  Bar,
+  ReferenceArea
 } from 'recharts';
 import { VPDData, WeekConfig, DayPeriod, IslandSelection } from '../types/vpd-types';
 import { format, parseISO } from 'date-fns';
@@ -42,18 +43,42 @@ const VPDEvolutionChart: React.FC<VPDEvolutionChartProps> = ({
   const processedData = useMemo(() => {
     let filteredData = data.data;
 
-    // Filtrar por período si no es 'full'
-    // Día planta: 23:00 a 17:00 del día siguiente
-    // Noche planta: 17:01 a 23:59
+    // Filtrar por período según el nuevo sistema de bloques
     if (selectedPeriod === 'day') {
+      // Día planta completo: 23:00 a 17:00 del día siguiente
       filteredData = data.data.filter(record => {
         const hour = record.hour;
-        return hour >= 23 || hour < 17; // 23:00-23:59 y 00:00-16:59
+        return hour >= 23 || hour < 17;
       });
-    } else if (selectedPeriod === 'night') {
+    } else if (selectedPeriod === 'night' || selectedPeriod === 'night_plant') {
+      // Noche planta: 17:01 a 22:59
       filteredData = data.data.filter(record => {
         const hour = record.hour;
-        return hour >= 17 && hour < 23; // 17:00-22:59
+        return hour >= 17 && hour < 23;
+      });
+    } else if (selectedPeriod === 'dawn_cold') {
+      // Madrugada Fría: 23:00 a 02:00
+      filteredData = data.data.filter(record => {
+        const hour = record.hour;
+        return hour >= 23 || hour <= 2;
+      });
+    } else if (selectedPeriod === 'night_deep') {
+      // Noche Profunda: 02:01 a 08:00
+      filteredData = data.data.filter(record => {
+        const hour = record.hour;
+        return hour > 2 && hour <= 8;
+      });
+    } else if (selectedPeriod === 'morning') {
+      // Amanecer: 08:01 a 12:00
+      filteredData = data.data.filter(record => {
+        const hour = record.hour;
+        return hour > 8 && hour <= 12;
+      });
+    } else if (selectedPeriod === 'day_active') {
+      // Día Activo: 12:01 a 17:00
+      filteredData = data.data.filter(record => {
+        const hour = record.hour;
+        return hour > 12 && hour < 17;
       });
     }
 
@@ -139,6 +164,21 @@ const VPDEvolutionChart: React.FC<VPDEvolutionChartProps> = ({
     .filter(([, isSelected]) => isSelected)
     .map(([islandId]) => islandId);
 
+  // Función para obtener el nombre del período seleccionado
+  const getPeriodName = (period: DayPeriod): string => {
+    const periodNames: { [key in DayPeriod]: string } = {
+      'full': '24 Horas',
+      'day': 'Día Planta (23:00-17:00)',
+      'night': 'Noche Planta (17:01-22:59)',
+      'night_plant': 'Noche Planta (17:01-22:59)',
+      'dawn_cold': 'Madrugada Fría (23:00-02:00)',
+      'night_deep': 'Noche Profunda (02:01-08:00)', 
+      'morning': 'Amanecer (08:01-12:00)',
+      'day_active': 'Día Activo (12:01-17:00)'
+    };
+    return periodNames[period];
+  };
+
   // Agrupar islas por semana de cultivo
   const islandsByWeek = {
     1: ['I3', 'I6'], // Semana 1 - Establecimiento radicular
@@ -189,6 +229,107 @@ const VPDEvolutionChart: React.FC<VPDEvolutionChartProps> = ({
     }
   };
 
+  // Función para renderizar franjas verticales y áreas sombreadas de bloques temporales
+  const renderTimeBlockDivisions = () => {
+    // Solo mostrar divisiones cuando se visualiza día completo, día planta o noche planta
+    if (!['full', 'day', 'night_plant'].includes(selectedPeriod)) {
+      return null;
+    }
+
+    const timeBlocks = [
+      { 
+        start: 23, end: 2, 
+        name: 'Madrugada Fría', 
+        color: '#2c3e50', 
+        fillColor: 'rgba(44, 62, 80, 0.08)',
+        icon: '🌙'
+      },
+      { 
+        start: 2, end: 8, 
+        name: 'Noche Profunda', 
+        color: '#34495e', 
+        fillColor: 'rgba(52, 73, 94, 0.08)',
+        icon: '🌌'
+      },
+      { 
+        start: 8, end: 12, 
+        name: 'Amanecer', 
+        color: '#f39c12', 
+        fillColor: 'rgba(243, 156, 18, 0.08)',
+        icon: '🌅'
+      },
+      { 
+        start: 12, end: 17, 
+        name: 'Día Activo', 
+        color: '#e67e22', 
+        fillColor: 'rgba(230, 126, 34, 0.08)',
+        icon: '☀️'
+      },
+      { 
+        start: 17, end: 23, 
+        name: 'Noche Planta', 
+        color: '#8e44ad', 
+        fillColor: 'rgba(142, 68, 173, 0.08)',
+        icon: '🌃'
+      }
+    ];
+
+    const elements = [];
+
+    // Agregar áreas sombreadas por bloque
+    timeBlocks.forEach((block, index) => {
+      let startTime, endTime;
+      
+      if (block.start > block.end) {
+        // Bloque que cruza medianoche (23:00-02:00)
+        startTime = processedData.find(record => record.hour === block.start)?.time;
+        endTime = processedData.find(record => record.hour === block.end && record.hour <= 2)?.time;
+      } else {
+        startTime = processedData.find(record => record.hour === block.start)?.time;
+        endTime = processedData.find(record => record.hour === block.end)?.time;
+      }
+
+      if (startTime && endTime) {
+        elements.push(
+          <ReferenceArea
+            key={`area-${index}`}
+            x1={startTime}
+            x2={endTime}
+            fill={block.fillColor}
+            fillOpacity={0.3}
+          />
+        );
+      }
+    });
+
+    // Agregar líneas divisorias
+    const blockDivisions = [
+      { hour: 2, name: 'Transición', color: '#2c3e50' },
+      { hour: 8, name: 'Transición', color: '#34495e' },
+      { hour: 12, name: 'Transición', color: '#f39c12' },
+      { hour: 17, name: 'Transición', color: '#e67e22' },
+      { hour: 23, name: 'Transición', color: '#8e44ad' }
+    ];
+
+    blockDivisions.forEach(division => {
+      const timePoint = processedData.find(record => record.hour === division.hour);
+      if (timePoint) {
+        elements.push(
+          <ReferenceLine 
+            key={`line-${division.hour}`}
+            x={timePoint.time}
+            stroke={division.color}
+            strokeWidth={1.5}
+            strokeDasharray="4 2"
+            strokeOpacity={0.6}
+          />
+        );
+      }
+    });
+
+    return elements;
+  };
+
   const renderWeekChart = (weekNumber: number) => {
     const weekIslands = islandsByWeek[weekNumber as keyof typeof islandsByWeek];
     const weekConf = weekConfigs[weekNumber as keyof typeof weekConfigs];
@@ -212,6 +353,14 @@ const VPDEvolutionChart: React.FC<VPDEvolutionChartProps> = ({
             <h3 className="chart-title-clean">
               📊 VPD - Déficit de Presión de Vapor
             </h3>
+            {(['full', 'day', 'night_plant'].includes(selectedPeriod)) && (
+              <div className="time-blocks-legend">
+                <small>
+                  🌙 Madrugada Fría (23:00-02:00) | 🌌 Noche Profunda (02:01-08:00) | 
+                  🌅 Amanecer (08:01-12:00) | ☀️ Día Activo (12:01-17:00) | 🌃 Noche Planta (17:01-22:59)
+                </small>
+              </div>
+            )}
           </div>
           
           <div className="chart-wrapper-clean">
@@ -259,6 +408,9 @@ const VPDEvolutionChart: React.FC<VPDEvolutionChartProps> = ({
                   strokeOpacity={0.8}
                 />
 
+                {/* Divisiones temporales por bloques */}
+                {renderTimeBlockDivisions()}
+
                 {weekIslands.map(islandId => (
                   <Line
                     key={islandId}
@@ -289,7 +441,7 @@ const VPDEvolutionChart: React.FC<VPDEvolutionChartProps> = ({
               🎯 Recomendaciones de Ajuste - {weekConf.name}
             </h3>
             <p className="recommendations-subtitle">
-              Acciones específicas para optimizar VPD - Período: {selectedPeriod === 'full' ? '24 Horas' : selectedPeriod === 'day' ? 'Día Planta (23:00-17:00)' : 'Noche Planta (17:01-22:59)'}
+              Acciones específicas para optimizar VPD - Período: {getPeriodName(selectedPeriod)}
             </p>
           </div>
 
@@ -564,6 +716,14 @@ const VPDEvolutionChart: React.FC<VPDEvolutionChartProps> = ({
             <h3 className="chart-title-clean">
               🌡️ Temperatura
             </h3>
+            {(['full', 'day', 'night_plant'].includes(selectedPeriod)) && (
+              <div className="time-blocks-legend">
+                <small>
+                  🌙 Madrugada Fría (23:00-02:00) | 🌌 Noche Profunda (02:01-08:00) | 
+                  🌅 Amanecer (08:01-12:00) | ☀️ Día Activo (12:01-17:00) | 🌃 Noche Planta (17:01-22:59)
+                </small>
+              </div>
+            )}
           </div>
           
           <div className="chart-wrapper-clean">
@@ -604,7 +764,7 @@ const VPDEvolutionChart: React.FC<VPDEvolutionChartProps> = ({
                   strokeOpacity={0.9}
                   label={{ 
                     value: `Temp Min: ${weekConf.tempMin}°C`, 
-                    position: 'topLeft',
+                    position: 'top',
                     style: { fontSize: '11px', fill: '#e74c3c', fontWeight: 'bold' }
                   }}
                 />
@@ -616,10 +776,13 @@ const VPDEvolutionChart: React.FC<VPDEvolutionChartProps> = ({
                   strokeOpacity={0.9}
                   label={{ 
                     value: `Temp Max: ${weekConf.tempMax}°C`, 
-                    position: 'topLeft',
+                    position: 'top',
                     style: { fontSize: '11px', fill: '#e74c3c', fontWeight: 'bold' }
                   }}
                 />
+
+                {/* Divisiones temporales por bloques */}
+                {renderTimeBlockDivisions()}
 
                 {weekIslands.map(islandId => (
                   <Line
@@ -650,6 +813,14 @@ const VPDEvolutionChart: React.FC<VPDEvolutionChartProps> = ({
             <h3 className="chart-title-clean">
               💧 Humedad Relativa
             </h3>
+            {(['full', 'day', 'night_plant'].includes(selectedPeriod)) && (
+              <div className="time-blocks-legend">
+                <small>
+                  🌙 Madrugada Fría (23:00-02:00) | 🌌 Noche Profunda (02:01-08:00) | 
+                  🌅 Amanecer (08:01-12:00) | ☀️ Día Activo (12:01-17:00) | 🌃 Noche Planta (17:01-22:59)
+                </small>
+              </div>
+            )}
           </div>
           
           <div className="chart-wrapper-clean">
@@ -690,7 +861,7 @@ const VPDEvolutionChart: React.FC<VPDEvolutionChartProps> = ({
                   strokeOpacity={0.9}
                   label={{ 
                     value: `HR Min: ${weekConf.humidityMin}%`, 
-                    position: 'topLeft',
+                    position: 'top',
                     style: { fontSize: '11px', fill: '#3498db', fontWeight: 'bold' }
                   }}
                 />
@@ -702,10 +873,13 @@ const VPDEvolutionChart: React.FC<VPDEvolutionChartProps> = ({
                   strokeOpacity={0.9}
                   label={{ 
                     value: `HR Max: ${weekConf.humidityMax}%`, 
-                    position: 'topLeft',
+                    position: 'top',
                     style: { fontSize: '11px', fill: '#3498db', fontWeight: 'bold' }
                   }}
                 />
+
+                {/* Divisiones temporales por bloques */}
+                {renderTimeBlockDivisions()}
 
                 {weekIslands.map(islandId => (
                   <Line

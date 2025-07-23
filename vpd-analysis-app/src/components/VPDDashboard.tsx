@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { VPDData, WeekConfig, DayPeriod, IslandSelection } from '../types/vpd-types';
+import { VPDData, WeekConfig, DayPeriod, IslandSelection, TimeBlock, TimeBlockConfig } from '../types/vpd-types';
 import VPDEvolutionChart from './VPDEvolutionChart';
 import VPDAnalysisTable from './VPDAnalysisTable';
 import VPDOptimizer from './VPDOptimizer';
@@ -103,6 +103,70 @@ const VPDDashboard: React.FC<VPDDashboardProps> = ({ data }) => {
 
   const currentWeekConfig = weekConfigs[selectedWeek];
 
+  // Configuración de bloques temporales para control climático inteligente
+  const timeBlocks: TimeBlockConfig = {
+    dawn_cold: {
+      id: 'dawn_cold',
+      name: 'Madrugada Fría',
+      icon: '🌙',
+      description: 'Temperatura más baja, mayor humedad',
+      startHour: 23,
+      endHour: 2,
+      duration: 3,
+      strategy: 'Subir temperatura, controlar humedad',
+      priority: 'temperature',
+      color: '#2c3e50'
+    },
+    night_deep: {
+      id: 'night_deep',
+      name: 'Noche Profunda',
+      icon: '🌌',
+      description: 'Temperatura estable baja, humedad sostenida',
+      startHour: 2,
+      endHour: 8,
+      duration: 6,
+      strategy: 'Mantener temperatura, deshumidificar',
+      priority: 'humidity',
+      color: '#34495e'
+    },
+    morning: {
+      id: 'morning',
+      name: 'Amanecer',
+      icon: '🌅',
+      description: 'Temperatura sube, humedad baja',
+      startHour: 8,
+      endHour: 12,
+      duration: 4,
+      strategy: 'Acompañar subida gradual',
+      priority: 'balance',
+      color: '#f39c12'
+    },
+    day_active: {
+      id: 'day_active',
+      name: 'Día Activo',
+      icon: '☀️',
+      description: 'Temperatura máxima, humedad mínima',
+      startHour: 12,
+      endHour: 17,
+      duration: 5,
+      strategy: 'Controlar temperatura máxima',
+      priority: 'temperature',
+      color: '#e67e22'
+    },
+    night_plant: {
+      id: 'night_plant',
+      name: 'Noche Planta',
+      icon: '🌃',
+      description: 'Período estable y uniforme',
+      startHour: 17,
+      endHour: 23,
+      duration: 6,
+      strategy: 'Mantener condiciones óptimas',
+      priority: 'balance',
+      color: '#8e44ad'
+    }
+  };
+
   // Handlers
   const handleWeekChange = (week: number) => {
     setSelectedWeek(week);
@@ -119,28 +183,65 @@ const VPDDashboard: React.FC<VPDDashboardProps> = ({ data }) => {
 
       {/* Control Panel */}
       <div className="control-panel">
-        {/* Period Selector */}
+        {/* Bloque Selector */}
         <div className="period-selector">
-          <h3>Período de Análisis</h3>
+          <h3>🕐 Análisis por Bloques Climáticos</h3>
+          <p className="period-description">Control inteligente dividido en 5 bloques temporales</p>
+          
+          {/* Botones de bloques principales */}
           <div className="period-buttons">
             <button
-              className={selectedPeriod === 'day' ? 'active' : ''}
-              onClick={() => setSelectedPeriod('day')}
-            >
-              ☀️ Día Planta (23:00-17:00)
-            </button>
-            <button
-              className={selectedPeriod === 'night' ? 'active' : ''}
-              onClick={() => setSelectedPeriod('night')}
-            >
-              🌙 Noche Planta (17:01-22:59)
-            </button>
-            <button
-              className={selectedPeriod === 'full' ? 'active' : ''}
+              className={selectedPeriod === 'full' ? 'active full-day' : 'full-day'}
               onClick={() => setSelectedPeriod('full')}
             >
-              🕐 24 Horas
+              🕐 24 Horas Completas
             </button>
+            <button
+              className={selectedPeriod === 'day' ? 'active day-plant' : 'day-plant'}
+              onClick={() => setSelectedPeriod('day')}
+            >
+              ☀️ Día Planta (18h)
+            </button>
+            <button
+              className={selectedPeriod === 'night_plant' ? 'active night-plant' : 'night-plant'}
+              onClick={() => setSelectedPeriod('night_plant')}
+            >
+              🌃 Noche Planta (6h)
+            </button>
+          </div>
+
+          {/* Bloques detallados del día planta */}
+          <div className="time-blocks-container">
+            <h4>📊 Bloques del Día Planta (23:00-17:00)</h4>
+            <div className="time-blocks">
+              {Object.values(timeBlocks).filter(block => block.id !== 'night_plant').map(block => (
+                <button
+                  key={block.id}
+                  className={selectedPeriod === block.id ? 'active time-block' : 'time-block'}
+                  onClick={() => setSelectedPeriod(block.id as DayPeriod)}
+                  style={{ 
+                    borderLeft: `4px solid ${block.color}`,
+                    backgroundColor: selectedPeriod === block.id ? `${block.color}15` : 'transparent'
+                  }}
+                >
+                  <div className="block-header">
+                    <span className="block-icon">{block.icon}</span>
+                    <span className="block-name">{block.name}</span>
+                    <span className="block-duration">({block.duration}h)</span>
+                  </div>
+                  <div className="block-time">
+                    {block.startHour}:00 - {block.endHour === 2 ? '02:00' : `${block.endHour}:00`}
+                  </div>
+                  <div className="block-description">{block.description}</div>
+                  <div className="block-strategy">
+                    <span className={`priority-indicator ${block.priority}`}>
+                      {block.priority === 'temperature' ? '🌡️' : block.priority === 'humidity' ? '💧' : '⚖️'}
+                    </span>
+                    {block.strategy}
+                  </div>
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       </div>
