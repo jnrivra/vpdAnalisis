@@ -154,7 +154,12 @@ const VPDEvolutionChart: React.FC<VPDEvolutionChartProps> = ({
       focus: 'Establecimiento radicular',
       optimalMin: 1.00,
       optimalMax: 1.05,
-      color: '#27ae60'
+      color: '#27ae60',
+      // Rangos recomendados para temperatura y humedad
+      tempMin: 22,
+      tempMax: 24,
+      humidityMin: 60,
+      humidityMax: 70
     },
     2: {
       name: 'Semana 2',
@@ -163,7 +168,11 @@ const VPDEvolutionChart: React.FC<VPDEvolutionChartProps> = ({
       focus: 'Desarrollo foliar',
       optimalMin: 0.95,
       optimalMax: 1.00,
-      color: '#f39c12'
+      color: '#f39c12',
+      tempMin: 23,
+      tempMax: 25,
+      humidityMin: 65,
+      humidityMax: 75
     },
     3: {
       name: 'Semana 3',
@@ -172,7 +181,11 @@ const VPDEvolutionChart: React.FC<VPDEvolutionChartProps> = ({
       focus: 'Máxima biomasa',
       optimalMin: 0.80,
       optimalMax: 1.00,
-      color: '#3498db'
+      color: '#3498db',
+      tempMin: 24,
+      tempMax: 26,
+      humidityMin: 70,
+      humidityMax: 80
     }
   };
 
@@ -234,16 +247,16 @@ const VPDEvolutionChart: React.FC<VPDEvolutionChartProps> = ({
                 <ReferenceLine 
                   y={weekConf.optimalMin} 
                   stroke={weekConf.color} 
-                  strokeWidth={1.5}
-                  strokeDasharray="5 5" 
-                  strokeOpacity={0.6}
+                  strokeWidth={3}
+                  strokeDasharray="8 4" 
+                  strokeOpacity={0.8}
                 />
                 <ReferenceLine 
                   y={weekConf.optimalMax} 
                   stroke={weekConf.color} 
-                  strokeWidth={1.5}
-                  strokeDasharray="5 5" 
-                  strokeOpacity={0.6}
+                  strokeWidth={3}
+                  strokeDasharray="8 4" 
+                  strokeOpacity={0.8}
                 />
 
                 {weekIslands.map(islandId => (
@@ -266,6 +279,282 @@ const VPDEvolutionChart: React.FC<VPDEvolutionChartProps> = ({
                 ))}
               </LineChart>
             </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* Panel de Recomendaciones Inteligentes */}
+        <div className="recommendations-panel">
+          <div className="recommendations-header">
+            <h3 className="recommendations-title">
+              🎯 Recomendaciones de Ajuste - {weekConf.name}
+            </h3>
+            <p className="recommendations-subtitle">
+              Acciones específicas para optimizar VPD - Período: {selectedPeriod === 'full' ? '24 Horas' : selectedPeriod === 'day' ? 'Día Planta (23:00-17:00)' : 'Noche Planta (17:01-22:59)'}
+            </p>
+          </div>
+
+          <div className="recommendations-grid">
+            {weekIslands.map(islandId => {
+              // Calcular estadísticas del período seleccionado
+              let periodData = processedData.map(record => ({
+                vpd: record[`${islandId}_VPD`],
+                temp: record[`${islandId}_Temp`],
+                humidity: record[`${islandId}_Humidity`]
+              })).filter(record => record.vpd !== undefined && record.temp !== undefined && record.humidity !== undefined);
+
+              if (periodData.length === 0) return null;
+
+              // Calcular consumo de deshumidificadores para esta isla PRIMERO
+              const islandDehumidifiers = processedData.map(record => {
+                const orienteKey = `${islandId}_Oriente`;
+                const ponenteKey = `${islandId}_Poniente`;
+                
+                const oriente = data.data.find(d => d.time === record.fullTime)?.dehumidifiers?.[orienteKey] || 0;
+                const poniente = data.data.find(d => d.time === record.fullTime)?.dehumidifiers?.[ponenteKey] || 0;
+                
+                return { oriente, poniente, total: oriente + poniente };
+              }).filter(d => d.total > 0);
+
+              const avgOriente = islandDehumidifiers.length > 0 
+                ? islandDehumidifiers.reduce((sum, d) => sum + d.oriente, 0) / islandDehumidifiers.length 
+                : 0;
+              const avgPoniente = islandDehumidifiers.length > 0 
+                ? islandDehumidifiers.reduce((sum, d) => sum + d.poniente, 0) / islandDehumidifiers.length 
+                : 0;
+              const avgTotal = avgOriente + avgPoniente;
+
+              // Determinar estado de consumo
+              const consumptionStatus = avgTotal > 8000 ? 'critical' : avgTotal > 6000 ? 'high' : avgTotal > 4000 ? 'moderate' : avgTotal > 0 ? 'low' : 'off';
+              const consumptionLabel = consumptionStatus === 'critical' ? 'CRÍTICO' : 
+                                     consumptionStatus === 'high' ? 'ALTO' : 
+                                     consumptionStatus === 'moderate' ? 'MODERADO' : 
+                                     consumptionStatus === 'low' ? 'BAJO' : 'APAGADO';
+
+              // Calcular promedios del período actual
+              const currentVPD = periodData.reduce((sum, record) => sum + record.vpd, 0) / periodData.length;
+              const currentTemp = periodData.reduce((sum, record) => sum + record.temp, 0) / periodData.length;
+              const currentHumidity = periodData.reduce((sum, record) => sum + record.humidity, 0) / periodData.length;
+              
+              // Calcular tiempo en rango óptimo para el período
+              const inOptimalRange = periodData.filter(record => 
+                record.vpd >= weekConf.optimalMin && record.vpd <= weekConf.optimalMax
+              ).length;
+              const optimalTimePercentage = (inOptimalRange / periodData.length) * 100;
+              
+              // VPD objetivo para esta semana
+              const targetVPDMin = weekConf.optimalMin;
+              const targetVPDMax = weekConf.optimalMax;
+              const targetVPD = (targetVPDMin + targetVPDMax) / 2;
+              
+              // Función para calcular VPD
+              const calculateVPD = (temp: number, humidity: number) => {
+                const svp = 0.6108 * Math.exp((17.27 * temp) / (temp + 237.3));
+                return svp * (1 - humidity / 100);
+              };
+
+              // Calcular ajustes necesarios
+              const recommendations = [];
+              
+              if (currentVPD < targetVPDMin) {
+                // VPD muy bajo - necesita subir
+                const tempIncrease = 2.0; // Subir 2°C
+                const vpdWithTempIncrease = calculateVPD(currentTemp + tempIncrease, currentHumidity);
+                
+                const humidityDecrease = 10; // Bajar 10%
+                const vpdWithHumidityDecrease = calculateVPD(currentTemp, currentHumidity - humidityDecrease);
+                
+                // Calcular impacto energético
+                const tempEnergyImpact = avgTotal > 6000 ? 'Deshumidificadores podrían aumentar +200W' : 
+                                       avgTotal > 4000 ? 'Deshumidificadores podrían aumentar +300W' : 
+                                       'Impacto energético bajo';
+                
+                const humidityEnergyImpact = avgTotal > 6000 ? 'Deshumidificadores podrían reducir -800W' : 
+                                           avgTotal > 4000 ? 'Deshumidificadores podrían reducir -500W' : 
+                                           avgTotal > 0 ? 'Deshumidificadores podrían reducir -200W' : 
+                                           'Deshumidificadores apagados - Sin impacto';
+
+                // Determinar prioridad basada en consumo actual
+                const energyPriority = avgTotal > 7000 ? '💰 AHORRO CRÍTICO' : avgTotal > 5000 ? '💡 AHORRO ALTO' : '⚡ AHORRO POSIBLE';
+
+                recommendations.push({
+                  status: 'low',
+                  priority: avgTotal > 7000 ? 'critical' : 'high',
+                  issue: `VPD muy bajo (${currentVPD.toFixed(2)} kPa) ${avgTotal > 6000 ? '- Alto consumo energético' : ''}`,
+                  energyStatus: energyPriority,
+                  options: [
+                    {
+                      action: `Subir temperatura +${tempIncrease}°C`,
+                      detail: `${currentTemp.toFixed(1)}°C → ${(currentTemp + tempIncrease).toFixed(1)}°C`,
+                      result: `VPD resultante: ${vpdWithTempIncrease.toFixed(2)} kPa`,
+                      energyImpact: tempEnergyImpact,
+                      feasibility: tempIncrease <= 3 ? 'fácil' : 'moderado',
+                      type: 'temperature',
+                      energyEfficient: avgTotal > 6000
+                    },
+                    {
+                      action: `Reducir humedad -${humidityDecrease}%`,
+                      detail: `${currentHumidity.toFixed(1)}% → ${(currentHumidity - humidityDecrease).toFixed(1)}%`,
+                      result: `VPD resultante: ${vpdWithHumidityDecrease.toFixed(2)} kPa`,
+                      energyImpact: humidityEnergyImpact,
+                      feasibility: currentHumidity - humidityDecrease > 50 ? 'fácil' : 'difícil',
+                      type: 'humidity',
+                      energyEfficient: avgTotal < 4000
+                    }
+                  ]
+                });
+              } else if (currentVPD > targetVPDMax) {
+                // VPD muy alto - necesita bajar
+                const tempDecrease = 2.0; // Bajar 2°C
+                const vpdWithTempDecrease = calculateVPD(currentTemp - tempDecrease, currentHumidity);
+                
+                const humidityIncrease = 10; // Subir 10%
+                const vpdWithHumidityIncrease = calculateVPD(currentTemp, currentHumidity + humidityIncrease);
+                
+                // Calcular impacto energético para VPD alto
+                const tempEnergyImpact = avgTotal > 6000 ? 'Deshumidificadores podrían reducir -400W' : 
+                                       avgTotal > 4000 ? 'Deshumidificadores podrían reducir -200W' : 
+                                       'Impacto energético mínimo';
+                
+                const humidityEnergyImpact = avgTotal > 6000 ? 'Deshumidificadores podrían aumentar +600W' : 
+                                           avgTotal > 4000 ? 'Deshumidificadores podrían aumentar +400W' : 
+                                           avgTotal > 0 ? 'Deshumidificadores podrían aumentar +200W' : 
+                                           'Deshumidificadores apagados - Sin impacto';
+
+                const energyPriority = avgTotal > 7000 ? '⚡ OPTIMIZAR CONSUMO' : avgTotal > 5000 ? '💡 MONITOREAR CONSUMO' : '🔋 CONSUMO CONTROLADO';
+
+                recommendations.push({
+                  status: 'high',
+                  priority: 'high',
+                  issue: `VPD muy alto (${currentVPD.toFixed(2)} kPa) ${avgTotal > 6000 ? '- Optimizar eficiencia' : ''}`,
+                  energyStatus: energyPriority,
+                  options: [
+                    {
+                      action: `Reducir temperatura -${tempDecrease}°C`,
+                      detail: `${currentTemp.toFixed(1)}°C → ${(currentTemp - tempDecrease).toFixed(1)}°C`,
+                      result: `VPD resultante: ${vpdWithTempDecrease.toFixed(2)} kPa`,
+                      energyImpact: tempEnergyImpact,
+                      feasibility: currentTemp - tempDecrease > 18 ? 'fácil' : 'difícil',
+                      type: 'temperature',
+                      energyEfficient: avgTotal > 5000
+                    },
+                    {
+                      action: `Aumentar humedad +${humidityIncrease}%`,
+                      detail: `${currentHumidity.toFixed(1)}% → ${(currentHumidity + humidityIncrease).toFixed(1)}%`,
+                      result: `VPD resultante: ${vpdWithHumidityIncrease.toFixed(2)} kPa`,
+                      energyImpact: humidityEnergyImpact,
+                      feasibility: currentHumidity + humidityIncrease < 90 ? 'fácil' : 'difícil',
+                      type: 'humidity',
+                      energyEfficient: avgTotal < 3000
+                    }
+                  ]
+                });
+              } else {
+                // VPD en rango óptimo
+                const energyEfficiencyStatus = avgTotal > 7000 ? '⚠️ Alto consumo - Revisar configuración' : 
+                                             avgTotal > 5000 ? '💡 Consumo moderado - Monitorear' : 
+                                             avgTotal > 2000 ? '✅ Consumo eficiente' : 
+                                             avgTotal > 0 ? '🟢 Consumo bajo' : '⚫ Deshumidificadores apagados';
+
+                recommendations.push({
+                  status: 'optimal',
+                  priority: avgTotal > 7000 ? 'medium' : 'low',
+                  issue: `VPD óptimo (${currentVPD.toFixed(2)} kPa)`,
+                  energyStatus: energyEfficiencyStatus,
+                  options: [
+                    {
+                      action: 'Mantener condiciones actuales',
+                      detail: `Temperatura: ${currentTemp.toFixed(1)}°C, Humedad: ${currentHumidity.toFixed(1)}%`,
+                      result: avgTotal > 7000 ? 'Monitorear consumo energético' : 'Condiciones ideales - Continuar monitoreo',
+                      energyImpact: `Consumo estable: ${avgTotal.toFixed(0)}W`,
+                      feasibility: 'fácil',
+                      type: 'maintain',
+                      energyEfficient: avgTotal < 5000
+                    }
+                  ]
+                });
+              }
+
+              return (
+                <div key={islandId} className="island-recommendation-card">
+                  <div className="island-header">
+                    <h4 className="island-title" style={{ color: islandColors[islandId as keyof typeof islandColors] }}>
+                      🏝️ Isla {islandId}
+                    </h4>
+                    <div className="dehumidifier-info">
+                      <div className="power-consumption">
+                        <span className="power-icon">💡</span>
+                        <span className="power-value">{avgTotal.toFixed(0)}W promedio</span>
+                        <span className={`consumption-badge ${consumptionStatus}`}>
+                          {consumptionStatus === 'critical' ? '🔴' : 
+                           consumptionStatus === 'high' ? '🟠' : 
+                           consumptionStatus === 'moderate' ? '🟡' : 
+                           consumptionStatus === 'low' ? '🟢' : '⚫'}
+                          {consumptionLabel}
+                        </span>
+                      </div>
+                      {avgTotal > 0 && (
+                        <div className="power-breakdown">
+                          <small>Oriente: {avgOriente.toFixed(0)}W | Poniente: {avgPoniente.toFixed(0)}W</small>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {recommendations.map((rec, recIndex) => (
+                    <div key={recIndex} className={`recommendation-content ${rec.status}`}>
+                      <div className="recommendation-issue">
+                        <span className={`status-badge ${rec.status}`}>
+                          {rec.status === 'low' ? '⬇️' : rec.status === 'high' ? '⬆️' : '✅'}
+                        </span>
+                        <span className="issue-text">{rec.issue}</span>
+                        <span className={`priority-badge ${rec.priority}`}>
+                          {rec.priority === 'critical' ? '🚨 CRÍTICO' : rec.priority === 'high' ? '🔴 URGENTE' : rec.priority === 'medium' ? '🟡 MEDIO' : '🟢 NORMAL'}
+                        </span>
+                      </div>
+
+                      {rec.energyStatus && (
+                        <div className="energy-status">
+                          <span className="energy-label">Estado Energético:</span>
+                          <span className="energy-value">{rec.energyStatus}</span>
+                        </div>
+                      )}
+
+                      <div className="recommendation-options">
+                        {rec.options.map((option, optIndex) => (
+                          <div key={optIndex} className={`option-card ${option.type} ${option.energyEfficient ? 'energy-efficient' : ''}`}>
+                            <div className="option-header">
+                              <span className="option-action">
+                                {option.energyEfficient && '⚡'} {option.action}
+                              </span>
+                              <div className="option-badges">
+                                <span className={`feasibility-badge ${option.feasibility}`}>
+                                  {option.feasibility === 'fácil' ? '🟢' : option.feasibility === 'moderado' ? '🟡' : '🔴'}
+                                  {option.feasibility}
+                                </span>
+                                {option.energyEfficient && (
+                                  <span className="efficiency-badge">
+                                    💚 Eficiente
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                            <div className="option-details">
+                              <p className="option-detail">{option.detail}</p>
+                              <p className="option-result">{option.result}</p>
+                              {option.energyImpact && (
+                                <p className="option-energy-impact">
+                                  💡 {option.energyImpact}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              );
+            })}
           </div>
         </div>
 
@@ -305,6 +594,32 @@ const VPDEvolutionChart: React.FC<VPDEvolutionChartProps> = ({
                 />
                 <Tooltip />
                 <Legend />
+                
+                {/* Líneas de referencia para temperatura óptima */}
+                <ReferenceLine 
+                  y={weekConf.tempMin} 
+                  stroke="#e74c3c" 
+                  strokeWidth={3}
+                  strokeDasharray="8 4" 
+                  strokeOpacity={0.9}
+                  label={{ 
+                    value: `Temp Min: ${weekConf.tempMin}°C`, 
+                    position: 'topLeft',
+                    style: { fontSize: '11px', fill: '#e74c3c', fontWeight: 'bold' }
+                  }}
+                />
+                <ReferenceLine 
+                  y={weekConf.tempMax} 
+                  stroke="#e74c3c" 
+                  strokeWidth={3}
+                  strokeDasharray="8 4" 
+                  strokeOpacity={0.9}
+                  label={{ 
+                    value: `Temp Max: ${weekConf.tempMax}°C`, 
+                    position: 'topLeft',
+                    style: { fontSize: '11px', fill: '#e74c3c', fontWeight: 'bold' }
+                  }}
+                />
 
                 {weekIslands.map(islandId => (
                   <Line
@@ -365,6 +680,32 @@ const VPDEvolutionChart: React.FC<VPDEvolutionChartProps> = ({
                 />
                 <Tooltip />
                 <Legend />
+                
+                {/* Líneas de referencia para humedad óptima */}
+                <ReferenceLine 
+                  y={weekConf.humidityMin} 
+                  stroke="#3498db" 
+                  strokeWidth={3}
+                  strokeDasharray="8 4" 
+                  strokeOpacity={0.9}
+                  label={{ 
+                    value: `HR Min: ${weekConf.humidityMin}%`, 
+                    position: 'topLeft',
+                    style: { fontSize: '11px', fill: '#3498db', fontWeight: 'bold' }
+                  }}
+                />
+                <ReferenceLine 
+                  y={weekConf.humidityMax} 
+                  stroke="#3498db" 
+                  strokeWidth={3}
+                  strokeDasharray="8 4" 
+                  strokeOpacity={0.9}
+                  label={{ 
+                    value: `HR Max: ${weekConf.humidityMax}%`, 
+                    position: 'topLeft',
+                    style: { fontSize: '11px', fill: '#3498db', fontWeight: 'bold' }
+                  }}
+                />
 
                 {weekIslands.map(islandId => (
                   <Line
@@ -386,219 +727,6 @@ const VPDEvolutionChart: React.FC<VPDEvolutionChartProps> = ({
                 ))}
               </LineChart>
             </ResponsiveContainer>
-          </div>
-        </div>
-
-        {/* Panel de Recomendaciones Inteligentes */}
-        <div className="recommendations-panel">
-          <div className="recommendations-header">
-            <h3 className="recommendations-title">
-              🎯 Recomendaciones de Ajuste - {weekConf.name}
-            </h3>
-            <p className="recommendations-subtitle">
-              Acciones específicas para optimizar VPD - Período: {selectedPeriod === 'full' ? '24 Horas' : selectedPeriod === 'day' ? 'Día Planta (23:00-17:00)' : 'Noche Planta (17:01-22:59)'}
-            </p>
-          </div>
-
-          <div className="recommendations-grid">
-            {weekIslands.map(islandId => {
-              // Calcular estadísticas del período seleccionado
-              let periodData = processedData.map(record => ({
-                vpd: record[`${islandId}_VPD`],
-                temp: record[`${islandId}_Temp`],
-                humidity: record[`${islandId}_Humidity`]
-              })).filter(record => record.vpd !== undefined && record.temp !== undefined && record.humidity !== undefined);
-
-              if (periodData.length === 0) return null;
-
-              // Calcular promedios del período actual
-              const currentVPD = periodData.reduce((sum, record) => sum + record.vpd, 0) / periodData.length;
-              const currentTemp = periodData.reduce((sum, record) => sum + record.temp, 0) / periodData.length;
-              const currentHumidity = periodData.reduce((sum, record) => sum + record.humidity, 0) / periodData.length;
-              
-              // Calcular tiempo en rango óptimo para el período
-              const inOptimalRange = periodData.filter(record => 
-                record.vpd >= weekConf.optimalMin && record.vpd <= weekConf.optimalMax
-              ).length;
-              const optimalTimePercentage = (inOptimalRange / periodData.length) * 100;
-              
-              // VPD objetivo para esta semana
-              const targetVPDMin = weekConf.optimalMin;
-              const targetVPDMax = weekConf.optimalMax;
-              const targetVPD = (targetVPDMin + targetVPDMax) / 2;
-              
-              // Función para calcular VPD
-              const calculateVPD = (temp: number, humidity: number) => {
-                const svp = 0.6108 * Math.exp((17.27 * temp) / (temp + 237.3));
-                return svp * (1 - humidity / 100);
-              };
-
-              // Calcular ajustes necesarios
-              const recommendations = [];
-              
-              if (currentVPD < targetVPDMin) {
-                // VPD muy bajo - necesita subir
-                const tempIncrease = 2.0; // Subir 2°C
-                const vpdWithTempIncrease = calculateVPD(currentTemp + tempIncrease, currentHumidity);
-                
-                const humidityDecrease = 10; // Bajar 10%
-                const vpdWithHumidityDecrease = calculateVPD(currentTemp, currentHumidity - humidityDecrease);
-                
-                recommendations.push({
-                  status: 'low',
-                  priority: 'high',
-                  issue: `VPD muy bajo (${currentVPD.toFixed(2)} kPa)`,
-                  options: [
-                    {
-                      action: `Subir temperatura +${tempIncrease}°C`,
-                      detail: `${currentTemp.toFixed(1)}°C → ${(currentTemp + tempIncrease).toFixed(1)}°C`,
-                      result: `VPD resultante: ${vpdWithTempIncrease.toFixed(2)} kPa`,
-                      feasibility: tempIncrease <= 3 ? 'fácil' : 'moderado',
-                      type: 'temperature'
-                    },
-                    {
-                      action: `Reducir humedad -${humidityDecrease}%`,
-                      detail: `${currentHumidity.toFixed(1)}% → ${(currentHumidity - humidityDecrease).toFixed(1)}%`,
-                      result: `VPD resultante: ${vpdWithHumidityDecrease.toFixed(2)} kPa`,
-                      feasibility: currentHumidity - humidityDecrease > 50 ? 'fácil' : 'difícil',
-                      type: 'humidity'
-                    }
-                  ]
-                });
-              } else if (currentVPD > targetVPDMax) {
-                // VPD muy alto - necesita bajar
-                const tempDecrease = 2.0; // Bajar 2°C
-                const vpdWithTempDecrease = calculateVPD(currentTemp - tempDecrease, currentHumidity);
-                
-                const humidityIncrease = 10; // Subir 10%
-                const vpdWithHumidityIncrease = calculateVPD(currentTemp, currentHumidity + humidityIncrease);
-                
-                recommendations.push({
-                  status: 'high',
-                  priority: 'high',
-                  issue: `VPD muy alto (${currentVPD.toFixed(2)} kPa)`,
-                  options: [
-                    {
-                      action: `Reducir temperatura -${tempDecrease}°C`,
-                      detail: `${currentTemp.toFixed(1)}°C → ${(currentTemp - tempDecrease).toFixed(1)}°C`,
-                      result: `VPD resultante: ${vpdWithTempDecrease.toFixed(2)} kPa`,
-                      feasibility: currentTemp - tempDecrease > 18 ? 'fácil' : 'difícil',
-                      type: 'temperature'
-                    },
-                    {
-                      action: `Aumentar humedad +${humidityIncrease}%`,
-                      detail: `${currentHumidity.toFixed(1)}% → ${(currentHumidity + humidityIncrease).toFixed(1)}%`,
-                      result: `VPD resultante: ${vpdWithHumidityIncrease.toFixed(2)} kPa`,
-                      feasibility: currentHumidity + humidityIncrease < 85 ? 'fácil' : 'moderado',
-                      type: 'humidity'
-                    }
-                  ]
-                });
-              } else {
-                // VPD en rango óptimo
-                recommendations.push({
-                  status: 'optimal',
-                  priority: 'low',
-                  issue: `VPD en rango óptimo (${currentVPD.toFixed(2)} kPa)`,
-                  options: [
-                    {
-                      action: 'Mantener condiciones actuales',
-                      detail: `Temp: ${currentTemp.toFixed(1)}°C, HR: ${currentHumidity.toFixed(1)}%`,
-                      result: 'Condiciones ideales para el crecimiento',
-                      feasibility: 'fácil',
-                      type: 'maintain'
-                    }
-                  ]
-                });
-              }
-
-              return (
-                <div key={islandId} className={`recommendation-card status-${recommendations[0]?.status}`}>
-                  <div className="rec-card-header">
-                    <h4 className="rec-island-title">
-                      <span className="rec-island-icon" style={{ color: islandColors[islandId as keyof typeof islandColors] }}>
-                        🏝️
-                      </span>
-                      {islandId}
-                    </h4>
-                    <div className={`rec-priority priority-${recommendations[0]?.priority}`}>
-                      {recommendations[0]?.priority === 'high' ? '🔴 Alta' : 
-                       recommendations[0]?.priority === 'medium' ? '🟡 Media' : '🟢 Baja'}
-                    </div>
-                  </div>
-
-                  <div className="rec-current-status">
-                    <div className="rec-metric">
-                      <span className="rec-label">VPD Actual:</span>
-                      <span className={`rec-value ${recommendations[0]?.status}`}>
-                        {currentVPD.toFixed(2)} kPa
-                      </span>
-                    </div>
-                    <div className="rec-metric">
-                      <span className="rec-label">Objetivo:</span>
-                      <span className="rec-value target">
-                        {weekConf.vpdRange} kPa
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="rec-issue">
-                    <span className="rec-issue-text">{recommendations[0]?.issue}</span>
-                  </div>
-
-                  <div className="rec-options">
-                    <h5 className="rec-options-title">Opciones de Ajuste:</h5>
-                    {recommendations[0]?.options.map((option, idx) => (
-                      <div key={idx} className={`rec-option feasibility-${option.feasibility}`}>
-                        <div className="rec-option-header">
-                          <span className="rec-option-action">{option.action}</span>
-                          <span className={`rec-feasibility ${option.feasibility}`}>
-                            {option.feasibility === 'fácil' ? '✅ Fácil' :
-                             option.feasibility === 'moderado' ? '⚠️ Moderado' : '❌ Difícil'}
-                          </span>
-                        </div>
-                        <div className="rec-option-detail">{option.detail}</div>
-                        <div className="rec-option-result">{option.result}</div>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="rec-time-impact">
-                    <small>
-                      📊 Tiempo en rango óptimo ({selectedPeriod === 'full' ? '24h' : selectedPeriod === 'day' ? 'día planta' : 'noche planta'}): {optimalTimePercentage.toFixed(1)}%
-                    </small>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-
-          {/* Resumen de acciones por semana */}
-          <div className="week-summary-actions">
-            <h4>📋 Resumen de Acciones Prioritarias - {weekConf.name}</h4>
-            <div className="summary-actions-grid">
-              {weekIslands.map(islandId => {
-                // Usar las estadísticas calculadas del período actual
-                let periodData = processedData.map(record => ({
-                  vpd: record[`${islandId}_VPD`]
-                })).filter(record => record.vpd !== undefined);
-
-                if (periodData.length === 0) return null;
-
-                const currentVPD = periodData.reduce((sum, record) => sum + record.vpd, 0) / periodData.length;
-                const actionNeeded = currentVPD < weekConf.optimalMin ? 'Subir VPD' :
-                                   currentVPD > weekConf.optimalMax ? 'Bajar VPD' : 'Mantener';
-                
-                return (
-                  <div key={islandId} className="summary-action-item">
-                    <span className="summary-island">{islandId}:</span>
-                    <span className={`summary-action ${actionNeeded.toLowerCase().replace(' ', '-')}`}>
-                      {actionNeeded}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
           </div>
         </div>
       </div>
