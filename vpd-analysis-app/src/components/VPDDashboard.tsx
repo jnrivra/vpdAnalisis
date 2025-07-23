@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { VPDData, WeekConfig, DayPeriod, IslandSelection, TimeBlock, TimeBlockConfig } from '../types/vpd-types';
 import VPDEvolutionChart from './VPDEvolutionChart';
+import VPDTemporalAnalysis from './VPDTemporalAnalysis';
 import VPDAnalysisTable from './VPDAnalysisTable';
 import VPDOptimizer from './VPDOptimizer';
 import './VPDDashboard.css';
@@ -21,7 +22,7 @@ const VPDDashboard: React.FC<VPDDashboardProps> = ({ data }) => {
     I5: true,
     I6: true,
   });
-  const [activeTab, setActiveTab] = useState<'evolution' | 'analysis' | 'optimizer'>('evolution');
+  const [activeTab, setActiveTab] = useState<'evolution' | 'temporal' | 'analysis' | 'optimizer'>('evolution');
 
   // Configuración de semanas (basado en tu HTML)
   // Configuración de semanas por isla basado en el estado real del cultivo
@@ -210,11 +211,101 @@ const VPDDashboard: React.FC<VPDDashboardProps> = ({ data }) => {
             </button>
           </div>
 
-          {/* Bloques detallados del día planta */}
-          <div className="time-blocks-container">
-            <h4>📊 Bloques del Día Planta (23:00-17:00)</h4>
-            <div className="time-blocks">
-              {Object.values(timeBlocks).filter(block => block.id !== 'night_plant').map(block => (
+          {/* Bloques detallados según pestaña activa */}
+          {activeTab === 'temporal' ? (
+            <div className="time-blocks-container">
+              <h4>🔥 Etapas del Ciclo Térmico Diario</h4>
+              <div className="time-blocks">
+                <button
+                  className={selectedPeriod === 'thermal_warmup' ? 'active time-block' : 'time-block'}
+                  onClick={() => setSelectedPeriod('thermal_warmup')}
+                  style={{ 
+                    borderLeft: '4px solid #e74c3c',
+                    backgroundColor: selectedPeriod === 'thermal_warmup' ? '#e74c3c15' : 'transparent'
+                  }}
+                >
+                  <div className="block-header">
+                    <span className="block-icon">🔥</span>
+                    <span className="block-name">Calentamiento Inicial</span>
+                    <span className="block-duration">(9h)</span>
+                  </div>
+                  <div className="block-time">23:00 - 08:00</div>
+                  <div className="block-description">Temperatura sube inicialmente</div>
+                  <div className="block-strategy">
+                    <span className="priority-indicator temperature">🌡️</span>
+                    Control del ascenso térmico
+                  </div>
+                </button>
+
+                <button
+                  className={selectedPeriod === 'thermal_rebound' ? 'active time-block' : 'time-block'}
+                  onClick={() => setSelectedPeriod('thermal_rebound')}
+                  style={{ 
+                    borderLeft: '4px solid #3498db',
+                    backgroundColor: selectedPeriod === 'thermal_rebound' ? '#3498db15' : 'transparent'
+                  }}
+                >
+                  <div className="block-header">
+                    <span className="block-icon">📉</span>
+                    <span className="block-name">Rebote Térmico</span>
+                    <span className="block-duration">(4h)</span>
+                  </div>
+                  <div className="block-time">08:01 - 12:00</div>
+                  <div className="block-description">Temperatura baja temporalmente</div>
+                  <div className="block-strategy">
+                    <span className="priority-indicator balance">⚖️</span>
+                    Acompañar descenso suave
+                  </div>
+                </button>
+
+                <button
+                  className={selectedPeriod === 'thermal_stabilization' ? 'active time-block' : 'time-block'}
+                  onClick={() => setSelectedPeriod('thermal_stabilization')}
+                  style={{ 
+                    borderLeft: '4px solid #2ecc71',
+                    backgroundColor: selectedPeriod === 'thermal_stabilization' ? '#2ecc7115' : 'transparent'
+                  }}
+                >
+                  <div className="block-header">
+                    <span className="block-icon">⚖️</span>
+                    <span className="block-name">Estabilización</span>
+                    <span className="block-duration">(5h)</span>
+                  </div>
+                  <div className="block-time">12:01 - 17:00</div>
+                  <div className="block-description">Temperatura se estabiliza</div>
+                  <div className="block-strategy">
+                    <span className="priority-indicator temperature">🌡️</span>
+                    Mantener equilibrio térmico
+                  </div>
+                </button>
+
+                <button
+                  className={selectedPeriod === 'night_stable' ? 'active time-block' : 'time-block'}
+                  onClick={() => setSelectedPeriod('night_stable')}
+                  style={{ 
+                    borderLeft: '4px solid #9b59b6',
+                    backgroundColor: selectedPeriod === 'night_stable' ? '#9b59b615' : 'transparent'
+                  }}
+                >
+                  <div className="block-header">
+                    <span className="block-icon">🌙</span>
+                    <span className="block-name">Noche Estable</span>
+                    <span className="block-duration">(6h)</span>
+                  </div>
+                  <div className="block-time">17:01 - 22:59</div>
+                  <div className="block-description">Período independiente y estable</div>
+                  <div className="block-strategy">
+                    <span className="priority-indicator balance">⚖️</span>
+                    Condiciones óptimas nocturnas
+                  </div>
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="time-blocks-container">
+              <h4>📊 Bloques del Día Planta (23:00-17:00)</h4>
+              <div className="time-blocks">
+                {Object.values(timeBlocks).filter(block => block.id !== 'night_plant').map(block => (
                 <button
                   key={block.id}
                   className={selectedPeriod === block.id ? 'active time-block' : 'time-block'}
@@ -243,6 +334,7 @@ const VPDDashboard: React.FC<VPDDashboardProps> = ({ data }) => {
               ))}
             </div>
           </div>
+          )}
         </div>
       </div>
 
@@ -253,6 +345,12 @@ const VPDDashboard: React.FC<VPDDashboardProps> = ({ data }) => {
           onClick={() => setActiveTab('evolution')}
         >
           📈 Evolución Temporal
+        </button>
+        <button
+          className={activeTab === 'temporal' ? 'active' : ''}
+          onClick={() => setActiveTab('temporal')}
+        >
+          🔥 Análisis Térmico
         </button>
         <button
           className={activeTab === 'analysis' ? 'active' : ''}
@@ -272,6 +370,15 @@ const VPDDashboard: React.FC<VPDDashboardProps> = ({ data }) => {
       <div className="tab-content">
         {activeTab === 'evolution' && (
           <VPDEvolutionChart
+            data={data}
+            selectedIslands={selectedIslands}
+            selectedPeriod={selectedPeriod}
+            weekConfig={currentWeekConfig}
+          />
+        )}
+
+        {activeTab === 'temporal' && (
+          <VPDTemporalAnalysis
             data={data}
             selectedIslands={selectedIslands}
             selectedPeriod={selectedPeriod}

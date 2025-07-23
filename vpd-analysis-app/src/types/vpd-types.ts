@@ -101,7 +101,8 @@ export interface VPDAnalysisResult {
 }
 
 // Tipos para períodos del día - Sistema de bloques temporales
-export type DayPeriod = 'day' | 'night' | 'full' | 'dawn_cold' | 'night_deep' | 'morning' | 'day_active' | 'night_plant';
+export type DayPeriod = 'day' | 'night' | 'full' | 'dawn_cold' | 'night_deep' | 'morning' | 'day_active' | 'night_plant' | 
+                        'thermal_warmup' | 'thermal_rebound' | 'thermal_stabilization' | 'night_stable';
 
 // Configuración de bloques temporales
 export interface TimeBlock {

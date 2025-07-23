@@ -16,14 +16,14 @@ import {
 import { VPDData, WeekConfig, DayPeriod, IslandSelection } from '../types/vpd-types';
 import { format, parseISO } from 'date-fns';
 
-interface VPDEvolutionChartProps {
+interface VPDTemporalAnalysisProps {
   data: VPDData;
   selectedIslands: IslandSelection;
   selectedPeriod: DayPeriod;
   weekConfig: WeekConfig;
 }
 
-const VPDEvolutionChart: React.FC<VPDEvolutionChartProps> = ({
+const VPDTemporalAnalysis: React.FC<VPDTemporalAnalysisProps> = ({
   data,
   selectedIslands,
   selectedPeriod,
@@ -52,6 +52,30 @@ const VPDEvolutionChart: React.FC<VPDEvolutionChartProps> = ({
       });
     } else if (selectedPeriod === 'night' || selectedPeriod === 'night_plant') {
       // Noche planta: 17:01 a 22:59
+      filteredData = data.data.filter(record => {
+        const hour = record.hour;
+        return hour >= 17 && hour < 23;
+      });
+    } else if (selectedPeriod === 'thermal_warmup') {
+      // Calentamiento Inicial: 23:00 a 08:00 (cuando la temperatura sube inicialmente)
+      filteredData = data.data.filter(record => {
+        const hour = record.hour;
+        return hour >= 23 || hour <= 8;
+      });
+    } else if (selectedPeriod === 'thermal_rebound') {
+      // Rebote Térmico: 08:01 a 12:00 (cuando baja la temperatura)
+      filteredData = data.data.filter(record => {
+        const hour = record.hour;
+        return hour > 8 && hour <= 12;
+      });
+    } else if (selectedPeriod === 'thermal_stabilization') {
+      // Estabilización: 12:01 a 17:00 (cuando se estabiliza)
+      filteredData = data.data.filter(record => {
+        const hour = record.hour;
+        return hour > 12 && hour < 17;
+      });
+    } else if (selectedPeriod === 'night_stable') {
+      // Noche Estable: 17:01 a 22:59 (período estable independiente)
       filteredData = data.data.filter(record => {
         const hour = record.hour;
         return hour >= 17 && hour < 23;
@@ -167,7 +191,7 @@ const VPDEvolutionChart: React.FC<VPDEvolutionChartProps> = ({
   // Función para obtener el nombre del período seleccionado
   const getPeriodName = (period: DayPeriod): string => {
     const periodNames: { [key in DayPeriod]: string } = {
-      'full': '24 Horas',
+      'full': '24 Horas Completas',
       'day': 'Día Planta (23:00-17:00)',
       'night': 'Noche Planta (17:01-22:59)',
       'night_plant': 'Noche Planta (17:01-22:59)',
@@ -236,45 +260,38 @@ const VPDEvolutionChart: React.FC<VPDEvolutionChartProps> = ({
   // Función para renderizar franjas verticales y áreas sombreadas de bloques temporales
   const renderTimeBlockDivisions = () => {
     // Solo mostrar divisiones cuando se visualiza día completo, día planta o noche planta
-    if (!['full', 'day', 'night_plant'].includes(selectedPeriod)) {
+    if (!['full', 'day', 'night_stable'].includes(selectedPeriod)) {
       return null;
     }
 
     const timeBlocks = [
       { 
-        start: 23, end: 2, 
-        name: 'Madrugada Fría', 
-        color: '#2c3e50', 
-        fillColor: 'rgba(44, 62, 80, 0.08)',
-        icon: '🌙'
-      },
-      { 
-        start: 2, end: 8, 
-        name: 'Noche Profunda', 
-        color: '#34495e', 
-        fillColor: 'rgba(52, 73, 94, 0.08)',
-        icon: '🌌'
+        start: 23, end: 8, 
+        name: 'Calentamiento Inicial', 
+        color: '#e74c3c', 
+        fillColor: 'rgba(231, 76, 60, 0.1)',
+        icon: '🔥'
       },
       { 
         start: 8, end: 12, 
-        name: 'Amanecer', 
-        color: '#f39c12', 
-        fillColor: 'rgba(243, 156, 18, 0.08)',
-        icon: '🌅'
+        name: 'Rebote Térmico', 
+        color: '#3498db', 
+        fillColor: 'rgba(52, 152, 219, 0.1)',
+        icon: '📉'
       },
       { 
         start: 12, end: 17, 
-        name: 'Día Activo', 
-        color: '#e67e22', 
-        fillColor: 'rgba(230, 126, 34, 0.08)',
-        icon: '☀️'
+        name: 'Estabilización', 
+        color: '#2ecc71', 
+        fillColor: 'rgba(46, 204, 113, 0.1)',
+        icon: '⚖️'
       },
       { 
         start: 17, end: 23, 
-        name: 'Noche Planta', 
-        color: '#8e44ad', 
-        fillColor: 'rgba(142, 68, 173, 0.08)',
-        icon: '🌃'
+        name: 'Noche Estable', 
+        color: '#9b59b6', 
+        fillColor: 'rgba(155, 89, 182, 0.1)',
+        icon: '🌙'
       }
     ];
 
@@ -308,11 +325,10 @@ const VPDEvolutionChart: React.FC<VPDEvolutionChartProps> = ({
 
     // Agregar líneas divisorias
     const blockDivisions = [
-      { hour: 2, name: 'Transición', color: '#2c3e50' },
-      { hour: 8, name: 'Transición', color: '#34495e' },
-      { hour: 12, name: 'Transición', color: '#f39c12' },
-      { hour: 17, name: 'Transición', color: '#e67e22' },
-      { hour: 23, name: 'Transición', color: '#8e44ad' }
+      { hour: 8, name: 'Inicio Rebote', color: '#3498db' },
+      { hour: 12, name: 'Inicio Estabilización', color: '#2ecc71' },
+      { hour: 17, name: 'Inicio Noche', color: '#9b59b6' },
+      { hour: 23, name: 'Inicio Calentamiento', color: '#e74c3c' }
     ];
 
     blockDivisions.forEach(division => {
@@ -357,11 +373,11 @@ const VPDEvolutionChart: React.FC<VPDEvolutionChartProps> = ({
             <h3 className="chart-title-clean">
               📊 VPD - Déficit de Presión de Vapor
             </h3>
-            {(['full', 'day', 'night_plant'].includes(selectedPeriod)) && (
+            {(['full', 'day', 'night_stable'].includes(selectedPeriod)) && (
               <div className="time-blocks-legend">
                 <small>
-                  🌙 Madrugada Fría (23:00-02:00) | 🌌 Noche Profunda (02:01-08:00) | 
-                  🌅 Amanecer (08:01-12:00) | ☀️ Día Activo (12:01-17:00) | 🌃 Noche Planta (17:01-22:59)
+                  🔥 Calentamiento Inicial (23:00-08:00) | 📉 Rebote Térmico (08:01-12:00) | 
+                  ⚖️ Estabilización (12:01-17:00) | 🌙 Noche Estable (17:01-22:59)
                 </small>
               </div>
             )}
@@ -663,6 +679,9 @@ const VPDEvolutionChart: React.FC<VPDEvolutionChartProps> = ({
                           {rec.status === 'low' ? '⬇️' : rec.status === 'high' ? '⬆️' : '✅'}
                         </span>
                         <span className="issue-text">{rec.issue}</span>
+                        <span className={`priority-badge ${rec.priority}`}>
+                          {rec.priority === 'critical' ? '🚨 CRÍTICO' : rec.priority === 'high' ? '🔴 URGENTE' : rec.priority === 'medium' ? '🟡 MEDIO' : '🟢 NORMAL'}
+                        </span>
                       </div>
 
                       {rec.energyStatus && (
@@ -680,6 +699,10 @@ const VPDEvolutionChart: React.FC<VPDEvolutionChartProps> = ({
                                 {option.energyEfficient && '⚡'} {option.action}
                               </span>
                               <div className="option-badges">
+                                <span className={`feasibility-badge ${option.feasibility}`}>
+                                  {option.feasibility === 'fácil' ? '🟢' : option.feasibility === 'moderado' ? '🟡' : '🔴'}
+                                  {option.feasibility}
+                                </span>
                                 {option.energyEfficient && (
                                   <span className="efficiency-badge">
                                     💚 Eficiente
@@ -713,11 +736,11 @@ const VPDEvolutionChart: React.FC<VPDEvolutionChartProps> = ({
             <h3 className="chart-title-clean">
               🌡️ Temperatura
             </h3>
-            {(['full', 'day', 'night_plant'].includes(selectedPeriod)) && (
+            {(['full', 'day', 'night_stable'].includes(selectedPeriod)) && (
               <div className="time-blocks-legend">
                 <small>
-                  🌙 Madrugada Fría (23:00-02:00) | 🌌 Noche Profunda (02:01-08:00) | 
-                  🌅 Amanecer (08:01-12:00) | ☀️ Día Activo (12:01-17:00) | 🌃 Noche Planta (17:01-22:59)
+                  🔥 Calentamiento Inicial (23:00-08:00) | 📉 Rebote Térmico (08:01-12:00) | 
+                  ⚖️ Estabilización (12:01-17:00) | 🌙 Noche Estable (17:01-22:59)
                 </small>
               </div>
             )}
@@ -810,11 +833,11 @@ const VPDEvolutionChart: React.FC<VPDEvolutionChartProps> = ({
             <h3 className="chart-title-clean">
               💧 Humedad Relativa
             </h3>
-            {(['full', 'day', 'night_plant'].includes(selectedPeriod)) && (
+            {(['full', 'day', 'night_stable'].includes(selectedPeriod)) && (
               <div className="time-blocks-legend">
                 <small>
-                  🌙 Madrugada Fría (23:00-02:00) | 🌌 Noche Profunda (02:01-08:00) | 
-                  🌅 Amanecer (08:01-12:00) | ☀️ Día Activo (12:01-17:00) | 🌃 Noche Planta (17:01-22:59)
+                  🔥 Calentamiento Inicial (23:00-08:00) | 📉 Rebote Térmico (08:01-12:00) | 
+                  ⚖️ Estabilización (12:01-17:00) | 🌙 Noche Estable (17:01-22:59)
                 </small>
               </div>
             )}
@@ -912,4 +935,4 @@ const VPDEvolutionChart: React.FC<VPDEvolutionChartProps> = ({
   );
 };
 
-export default VPDEvolutionChart;
+export default VPDTemporalAnalysis;
