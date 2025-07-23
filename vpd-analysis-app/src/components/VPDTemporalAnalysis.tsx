@@ -57,25 +57,25 @@ const VPDTemporalAnalysis: React.FC<VPDTemporalAnalysisProps> = ({
         return hour >= 17 && hour < 23;
       });
     } else if (selectedPeriod === 'thermal_warmup') {
-      // Calentamiento Inicial: 23:00 a 08:00 (cuando la temperatura sube inicialmente)
+      // Madrugada: 23:00 a 02:00 (período de madrugada)
       filteredData = data.data.filter(record => {
         const hour = record.hour;
-        return hour >= 23 || hour <= 8;
+        return hour >= 23 || hour <= 2;
       });
     } else if (selectedPeriod === 'thermal_rebound') {
-      // Rebote Térmico: 08:01 a 12:00 (cuando baja la temperatura)
+      // Amanecer: 02:01 a 05:00 (período de amanecer)
       filteredData = data.data.filter(record => {
         const hour = record.hour;
-        return hour > 8 && hour <= 12;
+        return hour > 2 && hour <= 5;
       });
     } else if (selectedPeriod === 'thermal_stabilization') {
-      // Estabilización: 12:01 a 17:00 (cuando se estabiliza)
+      // Día Activo: 05:01 a 17:00 (período día activo)
       filteredData = data.data.filter(record => {
         const hour = record.hour;
-        return hour > 12 && hour < 17;
+        return hour > 5 && hour < 17;
       });
     } else if (selectedPeriod === 'night_stable') {
-      // Noche Estable: 17:01 a 22:59 (período estable independiente)
+      // Noche Planta: 17:01 a 22:59 (período noche planta)
       filteredData = data.data.filter(record => {
         const hour = record.hour;
         return hour >= 17 && hour < 23;
@@ -199,10 +199,10 @@ const VPDTemporalAnalysis: React.FC<VPDTemporalAnalysisProps> = ({
       'night_deep': 'Noche Profunda (02:01-08:00)', 
       'morning': 'Amanecer (08:01-12:00)',
       'day_active': 'Día Activo (12:01-17:00)',
-      'thermal_warmup': 'Calentamiento Inicial (23:00-08:00)',
-      'thermal_rebound': 'Rebote Térmico (08:01-12:00)',
-      'thermal_stabilization': 'Estabilización (12:01-17:00)',
-      'night_stable': 'Noche Estable (17:01-22:59)'
+      'thermal_warmup': 'Madrugada (23:00-02:00)',
+      'thermal_rebound': 'Amanecer (02:01-05:00)',
+      'thermal_stabilization': 'Día Activo (05:01-17:00)',
+      'night_stable': 'Noche Planta (17:01-22:59)'
     };
     return periodNames[period];
   };
@@ -266,32 +266,32 @@ const VPDTemporalAnalysis: React.FC<VPDTemporalAnalysisProps> = ({
 
     const timeBlocks = [
       { 
-        start: 23, end: 8, 
-        name: 'Calentamiento Inicial', 
-        color: '#e74c3c', 
-        fillColor: 'rgba(231, 76, 60, 0.1)',
-        icon: '🔥'
+        start: 23, end: 2, 
+        name: 'Madrugada', 
+        color: '#2c3e50', 
+        fillColor: 'rgba(44, 62, 80, 0.1)',
+        icon: '🌙'
       },
       { 
-        start: 8, end: 12, 
-        name: 'Rebote Térmico', 
-        color: '#3498db', 
-        fillColor: 'rgba(52, 152, 219, 0.1)',
-        icon: '📉'
+        start: 2, end: 5, 
+        name: 'Amanecer', 
+        color: '#f39c12', 
+        fillColor: 'rgba(243, 156, 18, 0.1)',
+        icon: '🌅'
       },
       { 
-        start: 12, end: 17, 
-        name: 'Estabilización', 
-        color: '#2ecc71', 
-        fillColor: 'rgba(46, 204, 113, 0.1)',
-        icon: '⚖️'
+        start: 5, end: 17, 
+        name: 'Día Activo', 
+        color: '#e67e22', 
+        fillColor: 'rgba(230, 126, 34, 0.1)',
+        icon: '☀️'
       },
       { 
         start: 17, end: 23, 
-        name: 'Noche Estable', 
-        color: '#9b59b6', 
-        fillColor: 'rgba(155, 89, 182, 0.1)',
-        icon: '🌙'
+        name: 'Noche Planta', 
+        color: '#8e44ad', 
+        fillColor: 'rgba(142, 68, 173, 0.1)',
+        icon: '🌃'
       }
     ];
 
@@ -325,10 +325,10 @@ const VPDTemporalAnalysis: React.FC<VPDTemporalAnalysisProps> = ({
 
     // Agregar líneas divisorias
     const blockDivisions = [
-      { hour: 8, name: 'Inicio Rebote', color: '#3498db' },
-      { hour: 12, name: 'Inicio Estabilización', color: '#2ecc71' },
-      { hour: 17, name: 'Inicio Noche', color: '#9b59b6' },
-      { hour: 23, name: 'Inicio Calentamiento', color: '#e74c3c' }
+      { hour: 2, name: 'Inicio Amanecer', color: '#f39c12' },
+      { hour: 5, name: 'Inicio Día Activo', color: '#e67e22' },
+      { hour: 17, name: 'Inicio Noche Planta', color: '#8e44ad' },
+      { hour: 23, name: 'Inicio Madrugada', color: '#2c3e50' }
     ];
 
     blockDivisions.forEach(division => {
@@ -376,8 +376,8 @@ const VPDTemporalAnalysis: React.FC<VPDTemporalAnalysisProps> = ({
             {(['full', 'day', 'night_stable'].includes(selectedPeriod)) && (
               <div className="time-blocks-legend">
                 <small>
-                  🔥 Calentamiento Inicial (23:00-08:00) | 📉 Rebote Térmico (08:01-12:00) | 
-                  ⚖️ Estabilización (12:01-17:00) | 🌙 Noche Estable (17:01-22:59)
+                  🌙 Madrugada (23:00-02:00) | 🌅 Amanecer (02:01-05:00) | 
+                  ☀️ Día Activo (05:01-17:00) | 🌃 Noche Planta (17:01-22:59)
                 </small>
               </div>
             )}
@@ -739,8 +739,8 @@ const VPDTemporalAnalysis: React.FC<VPDTemporalAnalysisProps> = ({
             {(['full', 'day', 'night_stable'].includes(selectedPeriod)) && (
               <div className="time-blocks-legend">
                 <small>
-                  🔥 Calentamiento Inicial (23:00-08:00) | 📉 Rebote Térmico (08:01-12:00) | 
-                  ⚖️ Estabilización (12:01-17:00) | 🌙 Noche Estable (17:01-22:59)
+                  🌙 Madrugada (23:00-02:00) | 🌅 Amanecer (02:01-05:00) | 
+                  ☀️ Día Activo (05:01-17:00) | 🌃 Noche Planta (17:01-22:59)
                 </small>
               </div>
             )}
@@ -836,8 +836,8 @@ const VPDTemporalAnalysis: React.FC<VPDTemporalAnalysisProps> = ({
             {(['full', 'day', 'night_stable'].includes(selectedPeriod)) && (
               <div className="time-blocks-legend">
                 <small>
-                  🔥 Calentamiento Inicial (23:00-08:00) | 📉 Rebote Térmico (08:01-12:00) | 
-                  ⚖️ Estabilización (12:01-17:00) | 🌙 Noche Estable (17:01-22:59)
+                  🌙 Madrugada (23:00-02:00) | 🌅 Amanecer (02:01-05:00) | 
+                  ☀️ Día Activo (05:01-17:00) | 🌃 Noche Planta (17:01-22:59)
                 </small>
               </div>
             )}

@@ -220,20 +220,20 @@ const VPDDashboard: React.FC<VPDDashboardProps> = ({ data }) => {
                   className={selectedPeriod === 'thermal_warmup' ? 'active time-block' : 'time-block'}
                   onClick={() => setSelectedPeriod('thermal_warmup')}
                   style={{ 
-                    borderLeft: '4px solid #e74c3c',
-                    backgroundColor: selectedPeriod === 'thermal_warmup' ? '#e74c3c15' : 'transparent'
+                    borderLeft: '4px solid #2c3e50',
+                    backgroundColor: selectedPeriod === 'thermal_warmup' ? '#2c3e5015' : 'transparent'
                   }}
                 >
                   <div className="block-header">
-                    <span className="block-icon">🔥</span>
-                    <span className="block-name">Calentamiento Inicial</span>
-                    <span className="block-duration">(9h)</span>
+                    <span className="block-icon">🌙</span>
+                    <span className="block-name">Madrugada</span>
+                    <span className="block-duration">(3h)</span>
                   </div>
-                  <div className="block-time">23:00 - 08:00</div>
-                  <div className="block-description">Temperatura sube inicialmente</div>
+                  <div className="block-time">23:00 - 02:00</div>
+                  <div className="block-description">Período de madrugada</div>
                   <div className="block-strategy">
-                    <span className="priority-indicator temperature">🌡️</span>
-                    Control del ascenso térmico
+                    <span className="priority-indicator balance">⚖️</span>
+                    Condiciones estables nocturnas
                   </div>
                 </button>
 
@@ -241,20 +241,20 @@ const VPDDashboard: React.FC<VPDDashboardProps> = ({ data }) => {
                   className={selectedPeriod === 'thermal_rebound' ? 'active time-block' : 'time-block'}
                   onClick={() => setSelectedPeriod('thermal_rebound')}
                   style={{ 
-                    borderLeft: '4px solid #3498db',
-                    backgroundColor: selectedPeriod === 'thermal_rebound' ? '#3498db15' : 'transparent'
+                    borderLeft: '4px solid #f39c12',
+                    backgroundColor: selectedPeriod === 'thermal_rebound' ? '#f39c1215' : 'transparent'
                   }}
                 >
                   <div className="block-header">
-                    <span className="block-icon">📉</span>
-                    <span className="block-name">Rebote Térmico</span>
-                    <span className="block-duration">(4h)</span>
+                    <span className="block-icon">🌅</span>
+                    <span className="block-name">Amanecer</span>
+                    <span className="block-duration">(3h)</span>
                   </div>
-                  <div className="block-time">08:01 - 12:00</div>
-                  <div className="block-description">Temperatura baja temporalmente</div>
+                  <div className="block-time">02:01 - 05:00</div>
+                  <div className="block-description">Período de amanecer</div>
                   <div className="block-strategy">
-                    <span className="priority-indicator balance">⚖️</span>
-                    Acompañar descenso suave
+                    <span className="priority-indicator temperature">🌡️</span>
+                    Transición térmica gradual
                   </div>
                 </button>
 
@@ -262,20 +262,20 @@ const VPDDashboard: React.FC<VPDDashboardProps> = ({ data }) => {
                   className={selectedPeriod === 'thermal_stabilization' ? 'active time-block' : 'time-block'}
                   onClick={() => setSelectedPeriod('thermal_stabilization')}
                   style={{ 
-                    borderLeft: '4px solid #2ecc71',
-                    backgroundColor: selectedPeriod === 'thermal_stabilization' ? '#2ecc7115' : 'transparent'
+                    borderLeft: '4px solid #e67e22',
+                    backgroundColor: selectedPeriod === 'thermal_stabilization' ? '#e67e2215' : 'transparent'
                   }}
                 >
                   <div className="block-header">
-                    <span className="block-icon">⚖️</span>
-                    <span className="block-name">Estabilización</span>
-                    <span className="block-duration">(5h)</span>
+                    <span className="block-icon">☀️</span>
+                    <span className="block-name">Día Activo</span>
+                    <span className="block-duration">(12h)</span>
                   </div>
-                  <div className="block-time">12:01 - 17:00</div>
-                  <div className="block-description">Temperatura se estabiliza</div>
+                  <div className="block-time">05:01 - 17:00</div>
+                  <div className="block-description">Período principal diurno</div>
                   <div className="block-strategy">
                     <span className="priority-indicator temperature">🌡️</span>
-                    Mantener equilibrio térmico
+                    Control activo de condiciones
                   </div>
                 </button>
 
@@ -283,17 +283,17 @@ const VPDDashboard: React.FC<VPDDashboardProps> = ({ data }) => {
                   className={selectedPeriod === 'night_stable' ? 'active time-block' : 'time-block'}
                   onClick={() => setSelectedPeriod('night_stable')}
                   style={{ 
-                    borderLeft: '4px solid #9b59b6',
-                    backgroundColor: selectedPeriod === 'night_stable' ? '#9b59b615' : 'transparent'
+                    borderLeft: '4px solid #8e44ad',
+                    backgroundColor: selectedPeriod === 'night_stable' ? '#8e44ad15' : 'transparent'
                   }}
                 >
                   <div className="block-header">
-                    <span className="block-icon">🌙</span>
-                    <span className="block-name">Noche Estable</span>
+                    <span className="block-icon">🌃</span>
+                    <span className="block-name">Noche Planta</span>
                     <span className="block-duration">(6h)</span>
                   </div>
                   <div className="block-time">17:01 - 22:59</div>
-                  <div className="block-description">Período independiente y estable</div>
+                  <div className="block-description">Período nocturno de la planta</div>
                   <div className="block-strategy">
                     <span className="priority-indicator balance">⚖️</span>
                     Condiciones óptimas nocturnas
