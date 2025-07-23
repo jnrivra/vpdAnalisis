@@ -108,49 +108,37 @@ const VPDDashboard: React.FC<VPDDashboardProps> = ({ data }) => {
   const timeBlocks: TimeBlockConfig = {
     dawn_cold: {
       id: 'dawn_cold',
-      name: 'Madrugada Fría',
+      name: 'Madrugada',
       icon: '🌙',
-      description: 'Temperatura más baja, mayor humedad',
+      description: 'Período de madrugada',
       startHour: 23,
       endHour: 2,
       duration: 3,
-      strategy: 'Subir temperatura, controlar humedad',
-      priority: 'temperature',
+      strategy: 'Condiciones estables nocturnas',
+      priority: 'balance',
       color: '#2c3e50'
-    },
-    night_deep: {
-      id: 'night_deep',
-      name: 'Noche Profunda',
-      icon: '🌌',
-      description: 'Temperatura estable baja, humedad sostenida',
-      startHour: 2,
-      endHour: 8,
-      duration: 6,
-      strategy: 'Mantener temperatura, deshumidificar',
-      priority: 'humidity',
-      color: '#34495e'
     },
     morning: {
       id: 'morning',
       name: 'Amanecer',
       icon: '🌅',
-      description: 'Temperatura sube, humedad baja',
-      startHour: 8,
-      endHour: 12,
-      duration: 4,
-      strategy: 'Acompañar subida gradual',
-      priority: 'balance',
+      description: 'Período de amanecer',
+      startHour: 2,
+      endHour: 5,
+      duration: 3,
+      strategy: 'Transición térmica gradual',
+      priority: 'temperature',
       color: '#f39c12'
     },
     day_active: {
       id: 'day_active',
       name: 'Día Activo',
       icon: '☀️',
-      description: 'Temperatura máxima, humedad mínima',
-      startHour: 12,
+      description: 'Período principal diurno',
+      startHour: 5,
       endHour: 17,
-      duration: 5,
-      strategy: 'Controlar temperatura máxima',
+      duration: 12,
+      strategy: 'Control activo de condiciones',
       priority: 'temperature',
       color: '#e67e22'
     },
@@ -158,13 +146,25 @@ const VPDDashboard: React.FC<VPDDashboardProps> = ({ data }) => {
       id: 'night_plant',
       name: 'Noche Planta',
       icon: '🌃',
-      description: 'Período estable y uniforme',
+      description: 'Período nocturno de la planta',
       startHour: 17,
       endHour: 23,
       duration: 6,
-      strategy: 'Mantener condiciones óptimas',
+      strategy: 'Condiciones óptimas nocturnas',
       priority: 'balance',
       color: '#8e44ad'
+    },
+    night_deep: {
+      id: 'night_deep',
+      name: 'Noche Profunda',
+      icon: '🌌',
+      description: 'Análisis detallado nocturno',
+      startHour: 2,
+      endHour: 8,
+      duration: 6,
+      strategy: 'Análisis profundo nocturno',
+      priority: 'humidity',
+      color: '#34495e'
     }
   };
 
@@ -305,7 +305,9 @@ const VPDDashboard: React.FC<VPDDashboardProps> = ({ data }) => {
             <div className="time-blocks-container">
               <h4>📊 Bloques del Día Planta (23:00-17:00)</h4>
               <div className="time-blocks">
-                {Object.values(timeBlocks).filter(block => block.id !== 'night_plant').map(block => (
+                {Object.values(timeBlocks).filter(block => 
+                  block.id !== 'night_plant' && block.id !== 'night_deep'
+                ).map(block => (
                 <button
                   key={block.id}
                   className={selectedPeriod === block.id ? 'active time-block' : 'time-block'}
@@ -332,6 +334,31 @@ const VPDDashboard: React.FC<VPDDashboardProps> = ({ data }) => {
                   </div>
                 </button>
               ))}
+              
+              {/* Noche Profunda como opción adicional */}
+              <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid #e2e8f0' }}>
+                <h5 style={{ margin: '0 0 8px 0', color: '#64748b', fontSize: '12px' }}>Análisis Adicional:</h5>
+                <button
+                  className={selectedPeriod === 'night_deep' ? 'active time-block' : 'time-block'}
+                  onClick={() => setSelectedPeriod('night_deep')}
+                  style={{ 
+                    borderLeft: '4px solid #34495e',
+                    backgroundColor: selectedPeriod === 'night_deep' ? '#34495e15' : 'transparent'
+                  }}
+                >
+                  <div className="block-header">
+                    <span className="block-icon">🌌</span>
+                    <span className="block-name">Noche Profunda</span>
+                    <span className="block-duration">(6h)</span>
+                  </div>
+                  <div className="block-time">02:01 - 08:00</div>
+                  <div className="block-description">Análisis detallado nocturno</div>
+                  <div className="block-strategy">
+                    <span className="priority-indicator humidity">💧</span>
+                    Análisis profundo nocturno
+                  </div>
+                </button>
+              </div>
             </div>
           </div>
           )}
