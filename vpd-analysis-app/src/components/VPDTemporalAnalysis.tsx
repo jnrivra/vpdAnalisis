@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   LineChart,
   Line,
@@ -13,22 +13,26 @@ import {
   Bar,
   ReferenceArea
 } from 'recharts';
-import { VPDData, WeekConfig, DayPeriod, IslandSelection } from '../types/vpd-types';
+import { VPDData, WeekConfig, DayPeriod, IslandSelection, TimeBlock } from '../types/vpd-types';
 import { format, parseISO } from 'date-fns';
+import { useVPDData } from '../hooks/useVPDData';
 
 interface VPDTemporalAnalysisProps {
   data: VPDData;
   selectedIslands: IslandSelection;
-  selectedPeriod: DayPeriod;
   weekConfig: WeekConfig;
 }
 
 const VPDTemporalAnalysis: React.FC<VPDTemporalAnalysisProps> = ({
   data,
   selectedIslands,
-  selectedPeriod,
   weekConfig
 }) => {
+  // Estado local para el período
+  const [localPeriod, setLocalPeriod] = useState<DayPeriod>('full');
+  const [localTimeBlock, setLocalTimeBlock] = useState<TimeBlock | null>(null);
+  const [showEnergyData, setShowEnergyData] = useState(true);
+
   // Colores para cada isla
   const islandColors = {
     I1: '#27ae60',
@@ -43,894 +47,328 @@ const VPDTemporalAnalysis: React.FC<VPDTemporalAnalysisProps> = ({
   const processedData = useMemo(() => {
     let filteredData = data.data;
 
-    // Filtrar por período según el nuevo sistema de bloques
-    if (selectedPeriod === 'day') {
-      // Día planta completo: 23:00 a 17:00 del día siguiente
+    // Filtrar por período
+    if (localPeriod === 'day') {
       filteredData = data.data.filter(record => {
         const hour = record.hour;
         return hour >= 23 || hour < 17;
       });
-    } else if (selectedPeriod === 'night' || selectedPeriod === 'night_plant') {
-      // Noche planta: 17:01 a 22:59
+    } else if (localPeriod === 'night') {
       filteredData = data.data.filter(record => {
         const hour = record.hour;
         return hour >= 17 && hour < 23;
-      });
-    } else if (selectedPeriod === 'thermal_warmup') {
-      // Madrugada: 23:00 a 02:00 (período de madrugada)
-      filteredData = data.data.filter(record => {
-        const hour = record.hour;
-        return hour >= 23 || hour <= 2;
-      });
-    } else if (selectedPeriod === 'thermal_rebound') {
-      // Amanecer: 02:01 a 05:00 (período de amanecer)
-      filteredData = data.data.filter(record => {
-        const hour = record.hour;
-        return hour > 2 && hour <= 5;
-      });
-    } else if (selectedPeriod === 'thermal_stabilization') {
-      // Día Activo: 05:01 a 17:00 (período día activo)
-      filteredData = data.data.filter(record => {
-        const hour = record.hour;
-        return hour > 5 && hour < 17;
-      });
-    } else if (selectedPeriod === 'night_stable') {
-      // Noche Planta: 17:01 a 22:59 (período noche planta)
-      filteredData = data.data.filter(record => {
-        const hour = record.hour;
-        return hour >= 17 && hour < 23;
-      });
-    } else if (selectedPeriod === 'dawn_cold') {
-      // Madrugada Fría: 23:00 a 02:00
-      filteredData = data.data.filter(record => {
-        const hour = record.hour;
-        return hour >= 23 || hour <= 2;
-      });
-    } else if (selectedPeriod === 'night_deep') {
-      // Noche Profunda: 02:01 a 08:00
-      filteredData = data.data.filter(record => {
-        const hour = record.hour;
-        return hour > 2 && hour <= 8;
-      });
-    } else if (selectedPeriod === 'morning') {
-      // Amanecer: 08:01 a 12:00
-      filteredData = data.data.filter(record => {
-        const hour = record.hour;
-        return hour > 8 && hour <= 12;
-      });
-    } else if (selectedPeriod === 'day_active') {
-      // Día Activo: 12:01 a 17:00
-      filteredData = data.data.filter(record => {
-        const hour = record.hour;
-        return hour > 12 && hour < 17;
       });
     }
 
-    // Transformar datos para el gráfico
+    // Filtrar por bloque temporal si está seleccionado
+    if (localTimeBlock) {
+      filteredData = filteredData.filter(record => {
+        const hour = record.hour;
+        switch (localTimeBlock) {
+          case 'dawn_cold':
+            return hour >= 23 || hour <= 2;
+          case 'night_deep':
+            return hour > 2 && hour <= 8;
+          case 'morning':
+            return hour > 8 && hour <= 12;
+          case 'day_active':
+            return hour > 12 && hour < 17;
+          case 'night_plant':
+            return hour >= 17 && hour < 23;
+          default:
+            return true;
+        }
+      });
+    }
+
+    // Mapear datos para el gráfico
     return filteredData.map(record => {
-      const timeObj = parseISO(record.time);
-      const formattedTime = format(timeObj, 'HH:mm');
-      
-      const result: any = {
-        time: formattedTime,
+      const chartData: any = {
+        time: format(parseISO(record.time), 'HH:mm'),
         hour: record.hour,
-        fullTime: record.time,
       };
 
-      // Agregar datos de VPD, temperatura y humedad para islas seleccionadas
-      Object.entries(selectedIslands).forEach(([islandId, isSelected]) => {
-        if (isSelected) {
-          const islandData = record.islands[islandId as keyof typeof record.islands];
-          if (islandData) {
-            result[`${islandId}_VPD`] = islandData.vpd;
-            result[`${islandId}_Temp`] = islandData.temperature;
-            result[`${islandId}_Humidity`] = islandData.humidity;
-          }
+      // Agregar datos de VPD para islas seleccionadas
+      Object.entries(selectedIslands).forEach(([island, selected]) => {
+        if (selected) {
+          chartData[`${island}_VPD`] = record.islands[island as keyof typeof record.islands]?.vpd;
         }
       });
 
-      // Calcular promedio de deshumidificadores activos
-      const activeDehumidifiers = Object.entries(record.dehumidifiers).filter(([key, value]) => {
-        const islandMatch = Object.keys(selectedIslands).some(island => 
-          key.includes(island) && selectedIslands[island as keyof IslandSelection]
-        );
-        return islandMatch && value > 0;
-      });
-      
-      if (activeDehumidifiers.length > 0) {
-        result.avgDehumidifier = activeDehumidifiers.reduce((sum, [, value]) => sum + value, 0) / activeDehumidifiers.length;
-      } else {
-        result.avgDehumidifier = 0;
+      // Agregar consumo total de deshumidificadores
+      if (showEnergyData) {
+        const totalConsumption = Object.values(record.dehumidifiers || {})
+          .reduce((sum, value) => sum + (value || 0), 0);
+        chartData.totalConsumption = totalConsumption / 1000; // Convertir a kW
       }
 
-      return result;
+      return chartData;
     });
-  }, [data, selectedIslands, selectedPeriod]);
+  }, [data.data, selectedIslands, localPeriod, localTimeBlock, showEnergyData]);
 
-  // Tooltip personalizado
-  const CustomTooltip = ({ active, payload, label }: any) => {
-    if (active && payload && payload.length) {
-      const record = processedData.find(d => d.time === label);
-      return (
-        <div className="custom-tooltip">
-          <p className="tooltip-time">{`Hora: ${label}`}</p>
-          {payload.filter((entry: any) => entry.dataKey.includes('_VPD')).map((entry: any, index: number) => {
-            const islandId = entry.dataKey.replace('_VPD', '');
-            const islandRecord = record && record[`${islandId}_VPD`];
-            const temp = record && record[`${islandId}_Temp`];
-            const humidity = record && record[`${islandId}_Humidity`];
-            
-            if (!islandRecord || typeof islandRecord !== 'number') return null;
-            
-            return (
-              <div key={index} className="tooltip-island">
-                <p style={{ color: entry.color }}>
-                  <strong>{islandId}:</strong>
-                </p>
-                <p>VPD: {islandRecord.toFixed(3)} kPa</p>
-                <p>Temp: {typeof temp === 'number' ? temp.toFixed(1) : 'N/A'}°C</p>
-                <p>HR: {typeof humidity === 'number' ? humidity.toFixed(1) : 'N/A'}%</p>
-              </div>
-            );
-          })}
-          {record?.avgDehumidifier && record.avgDehumidifier > 0 && (
-            <p className="tooltip-dehumidifier">
-              Deshumidificadores: {record.avgDehumidifier.toFixed(0)}W
-            </p>
-          )}
-        </div>
-      );
-    }
-    return null;
-  };
+  // Calcular estadísticas
+  const statistics = useMemo(() => {
+    const stats: any = {};
+    const activeIslands = Object.entries(selectedIslands)
+      .filter(([_, selected]) => selected)
+      .map(([island]) => island);
 
-  const selectedIslandsList = Object.entries(selectedIslands)
-    .filter(([, isSelected]) => isSelected)
-    .map(([islandId]) => islandId);
+    activeIslands.forEach(island => {
+      const vpdValues = processedData
+        .map(d => d[`${island}_VPD`])
+        .filter(v => v !== undefined && v !== null);
 
-  // Función para obtener el nombre del período seleccionado
-  const getPeriodName = (period: DayPeriod): string => {
-    const periodNames: { [key in DayPeriod]: string } = {
-      'full': '24 Horas Completas',
-      'day': 'Día Planta (23:00-17:00)',
-      'night': 'Noche Planta (17:01-22:59)',
-      'night_plant': 'Noche Planta (17:01-22:59)',
-      'dawn_cold': 'Madrugada Fría (23:00-02:00)',
-      'night_deep': 'Noche Profunda (02:01-08:00)', 
-      'morning': 'Amanecer (08:01-12:00)',
-      'day_active': 'Día Activo (12:01-17:00)',
-      'thermal_warmup': 'Madrugada (23:00-02:00)',
-      'thermal_rebound': 'Amanecer (02:01-05:00)',
-      'thermal_stabilization': 'Día Activo (05:01-17:00)',
-      'night_stable': 'Noche Planta (17:01-22:59)'
-    };
-    return periodNames[period];
-  };
+      if (vpdValues.length > 0) {
+        const avg = vpdValues.reduce((a, b) => a + b, 0) / vpdValues.length;
+        const optimalCount = vpdValues.filter(v => 
+          v >= weekConfig.optimalMin && v <= weekConfig.optimalMax
+        ).length;
+        const optimalPercentage = (optimalCount / vpdValues.length) * 100;
 
-  // Agrupar islas por semana de cultivo
-  const islandsByWeek = {
-    1: ['I3', 'I6'], // Semana 1 - Establecimiento radicular
-    2: ['I2'],       // Semana 2 - Desarrollo foliar
-    3: ['I1', 'I4']  // Semana 3 - Máxima biomasa
-  };
-
-  const weekConfigs = {
-    1: {
-      name: 'Semana 1',
-      icon: '🌱',
-      vpdRange: '1.00-1.05',
-      focus: 'Establecimiento radicular',
-      optimalMin: 1.00,
-      optimalMax: 1.05,
-      color: '#27ae60',
-      // Rangos recomendados para temperatura y humedad
-      tempMin: 22,
-      tempMax: 24,
-      humidityMin: 60,
-      humidityMax: 70
-    },
-    2: {
-      name: 'Semana 2',
-      icon: '🌿',
-      vpdRange: '0.95-1.00',
-      focus: 'Desarrollo foliar',
-      optimalMin: 0.95,
-      optimalMax: 1.00,
-      color: '#f39c12',
-      tempMin: 23,
-      tempMax: 25,
-      humidityMin: 65,
-      humidityMax: 75
-    },
-    3: {
-      name: 'Semana 3',
-      icon: '🥬',
-      vpdRange: '0.80-1.00',
-      focus: 'Máxima biomasa',
-      optimalMin: 0.80,
-      optimalMax: 1.00,
-      color: '#3498db',
-      tempMin: 24,
-      tempMax: 26,
-      humidityMin: 70,
-      humidityMax: 80
-    }
-  };
-
-  // Función para renderizar franjas verticales y áreas sombreadas de bloques temporales
-  const renderTimeBlockDivisions = () => {
-    // Solo mostrar divisiones cuando se visualiza día completo, día planta o noche planta
-    if (!['full', 'day', 'night_stable'].includes(selectedPeriod)) {
-      return null;
-    }
-
-    const timeBlocks = [
-      { 
-        start: 23, end: 2, 
-        name: 'Madrugada', 
-        color: '#2c3e50', 
-        fillColor: 'rgba(44, 62, 80, 0.1)',
-        icon: '🌙'
-      },
-      { 
-        start: 2, end: 5, 
-        name: 'Amanecer', 
-        color: '#f39c12', 
-        fillColor: 'rgba(243, 156, 18, 0.1)',
-        icon: '🌅'
-      },
-      { 
-        start: 5, end: 17, 
-        name: 'Día Activo', 
-        color: '#e67e22', 
-        fillColor: 'rgba(230, 126, 34, 0.1)',
-        icon: '☀️'
-      },
-      { 
-        start: 17, end: 23, 
-        name: 'Noche Planta', 
-        color: '#8e44ad', 
-        fillColor: 'rgba(142, 68, 173, 0.1)',
-        icon: '🌃'
-      }
-    ];
-
-    const elements: React.ReactElement[] = [];
-
-    // Agregar áreas sombreadas por bloque
-    timeBlocks.forEach((block, index) => {
-      let startTime, endTime;
-      
-      if (block.start > block.end) {
-        // Bloque que cruza medianoche (23:00-02:00)
-        startTime = processedData.find(record => record.hour === block.start)?.time;
-        endTime = processedData.find(record => record.hour === block.end && record.hour <= 2)?.time;
-      } else {
-        startTime = processedData.find(record => record.hour === block.start)?.time;
-        endTime = processedData.find(record => record.hour === block.end)?.time;
-      }
-
-      if (startTime && endTime) {
-        elements.push(
-          <ReferenceArea
-            key={`area-${index}`}
-            x1={startTime}
-            x2={endTime}
-            fill={block.fillColor}
-            fillOpacity={0.3}
-          />
-        );
+        stats[island] = {
+          avg: avg.toFixed(2),
+          min: Math.min(...vpdValues).toFixed(2),
+          max: Math.max(...vpdValues).toFixed(2),
+          optimalPercentage: optimalPercentage.toFixed(1)
+        };
       }
     });
 
-    // Agregar líneas divisorias
-    const blockDivisions = [
-      { hour: 2, name: 'Inicio Amanecer', color: '#f39c12' },
-      { hour: 5, name: 'Inicio Día Activo', color: '#e67e22' },
-      { hour: 17, name: 'Inicio Noche Planta', color: '#8e44ad' },
-      { hour: 23, name: 'Inicio Madrugada', color: '#2c3e50' }
-    ];
+    return stats;
+  }, [processedData, selectedIslands, weekConfig]);
 
-    blockDivisions.forEach(division => {
-      const timePoint = processedData.find(record => record.hour === division.hour);
-      if (timePoint) {
-        elements.push(
-          <ReferenceLine 
-            key={`line-${division.hour}`}
-            x={timePoint.time}
-            stroke={division.color}
-            strokeWidth={1.5}
-            strokeDasharray="4 2"
-            strokeOpacity={0.6}
-          />
-        );
-      }
-    });
-
-    return elements;
-  };
-
-  const renderWeekChart = (weekNumber: number) => {
-    const weekIslands = islandsByWeek[weekNumber as keyof typeof islandsByWeek];
-    const weekConf = weekConfigs[weekNumber as keyof typeof weekConfigs];
-    
-    return (
-      <div key={weekNumber} className="week-analysis-container">
-        <div className="week-header">
-          <h2 className="week-title">
-            <span className="week-icon" style={{ color: weekConf.color }}>{weekConf.icon}</span>
-            {weekConf.name} - {weekConf.focus}
-          </h2>
-          <div className="week-info">
-            <span>Islas: <strong>{weekIslands.join(', ')}</strong></span>
-            <span>Target VPD: <strong style={{ color: weekConf.color }}>{weekConf.vpdRange} kPa</strong></span>
-          </div>
-        </div>
-        
-        {/* Gráfico VPD */}
-        <div className="clean-chart-container">
-          <div className="chart-header-clean">
-            <h3 className="chart-title-clean">
-              📊 VPD - Déficit de Presión de Vapor
-            </h3>
-            {(['full', 'day', 'night_stable'].includes(selectedPeriod)) && (
-              <div className="time-blocks-legend">
-                <small>
-                  🌙 Madrugada (23:00-02:00) | 🌅 Amanecer (02:01-05:00) | 
-                  ☀️ Día Activo (05:01-17:00) | 🌃 Noche Planta (17:01-22:59)
-                </small>
-              </div>
-            )}
-          </div>
-          
-          <div className="chart-wrapper-clean">
-            <ResponsiveContainer width="100%" height={350}>
-              <LineChart 
-                data={processedData}
-                margin={{ top: 10, right: 20, left: 10, bottom: 20 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" strokeOpacity={0.4} />
-                <XAxis 
-                  dataKey="time" 
-                  tick={{ fontSize: 11, fill: '#64748b' }}
-                  axisLine={{ stroke: '#cbd5e1' }}
-                  tickLine={{ stroke: '#cbd5e1' }}
-                  interval="preserveStartEnd"
-                />
-                <YAxis 
-                  domain={['dataMin - 0.05', 'dataMax + 0.05']}
-                  tick={{ fontSize: 11, fill: '#64748b' }}
-                  axisLine={{ stroke: '#cbd5e1' }}
-                  tickLine={{ stroke: '#cbd5e1' }}
-                  label={{ 
-                    value: 'VPD (kPa)', 
-                    angle: -90, 
-                    position: 'insideLeft',
-                    style: { textAnchor: 'middle', fontSize: '12px', fill: '#475569' }
-                  }}
-                />
-                <Tooltip content={<CustomTooltip />} />
-                <Legend />
-                
-                {/* Líneas de referencia */}
-                <ReferenceLine 
-                  y={weekConf.optimalMin} 
-                  stroke={weekConf.color} 
-                  strokeWidth={3}
-                  strokeDasharray="8 4" 
-                  strokeOpacity={0.8}
-                />
-                <ReferenceLine 
-                  y={weekConf.optimalMax} 
-                  stroke={weekConf.color} 
-                  strokeWidth={3}
-                  strokeDasharray="8 4" 
-                  strokeOpacity={0.8}
-                />
-
-                {/* Divisiones temporales por bloques */}
-                {renderTimeBlockDivisions()}
-
-                {weekIslands.map(islandId => (
-                  <Line
-                    key={islandId}
-                    type="monotone"
-                    dataKey={`${islandId}_VPD`}
-                    stroke={islandColors[islandId as keyof typeof islandColors]}
-                    strokeWidth={2.5}
-                    name={`${islandId} VPD`}
-                    connectNulls={false}
-                    dot={false}
-                    activeDot={{ 
-                      r: 4, 
-                      fill: islandColors[islandId as keyof typeof islandColors],
-                      stroke: '#ffffff',
-                      strokeWidth: 2
-                    }}
-                  />
-                ))}
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-        {/* Panel de Recomendaciones Inteligentes */}
-        <div className="recommendations-panel">
-          <div className="recommendations-header">
-            <h3 className="recommendations-title">
-              🎯 Recomendaciones de Ajuste - {weekConf.name}
-            </h3>
-            <p className="recommendations-subtitle">
-              Acciones específicas para optimizar VPD - Período: {getPeriodName(selectedPeriod)}
-            </p>
-          </div>
-
-          <div className="recommendations-grid">
-            {weekIslands.map(islandId => {
-              // Calcular estadísticas del período seleccionado
-              let periodData = processedData.map(record => ({
-                vpd: record[`${islandId}_VPD`],
-                temp: record[`${islandId}_Temp`],
-                humidity: record[`${islandId}_Humidity`]
-              })).filter(record => record.vpd !== undefined && record.temp !== undefined && record.humidity !== undefined);
-
-              if (periodData.length === 0) return null;
-
-              // Calcular consumo de deshumidificadores para esta isla PRIMERO
-              const islandDehumidifiers = processedData.map(record => {
-                const orienteKey = `${islandId}_Oriente`;
-                const ponenteKey = `${islandId}_Poniente`;
-                
-                const oriente = data.data.find(d => d.time === record.fullTime)?.dehumidifiers?.[orienteKey] || 0;
-                const poniente = data.data.find(d => d.time === record.fullTime)?.dehumidifiers?.[ponenteKey] || 0;
-                
-                return { oriente, poniente, total: oriente + poniente };
-              }).filter(d => d.total > 0);
-
-              const avgOriente = islandDehumidifiers.length > 0 
-                ? islandDehumidifiers.reduce((sum, d) => sum + d.oriente, 0) / islandDehumidifiers.length 
-                : 0;
-              const avgPoniente = islandDehumidifiers.length > 0 
-                ? islandDehumidifiers.reduce((sum, d) => sum + d.poniente, 0) / islandDehumidifiers.length 
-                : 0;
-              const avgTotal = avgOriente + avgPoniente;
-
-              // Determinar estado de consumo
-              const consumptionStatus = avgTotal > 8000 ? 'critical' : avgTotal > 6000 ? 'high' : avgTotal > 4000 ? 'moderate' : avgTotal > 0 ? 'low' : 'off';
-              const consumptionLabel = consumptionStatus === 'critical' ? 'CRÍTICO' : 
-                                     consumptionStatus === 'high' ? 'ALTO' : 
-                                     consumptionStatus === 'moderate' ? 'MODERADO' : 
-                                     consumptionStatus === 'low' ? 'BAJO' : 'APAGADO';
-
-              // Calcular promedios del período actual
-              const currentVPD = periodData.reduce((sum, record) => sum + record.vpd, 0) / periodData.length;
-              const currentTemp = periodData.reduce((sum, record) => sum + record.temp, 0) / periodData.length;
-              const currentHumidity = periodData.reduce((sum, record) => sum + record.humidity, 0) / periodData.length;
-              
-              // Calcular tiempo en rango óptimo para el período
-              const inOptimalRange = periodData.filter(record => 
-                record.vpd >= weekConf.optimalMin && record.vpd <= weekConf.optimalMax
-              ).length;
-              const optimalTimePercentage = (inOptimalRange / periodData.length) * 100;
-              
-              // VPD objetivo para esta semana
-              const targetVPDMin = weekConf.optimalMin;
-              const targetVPDMax = weekConf.optimalMax;
-              const targetVPD = (targetVPDMin + targetVPDMax) / 2;
-              
-              // Función para calcular VPD
-              const calculateVPD = (temp: number, humidity: number) => {
-                const svp = 0.6108 * Math.exp((17.27 * temp) / (temp + 237.3));
-                return svp * (1 - humidity / 100);
-              };
-
-              // Calcular ajustes necesarios
-              const recommendations = [];
-              
-              if (currentVPD < targetVPDMin) {
-                // VPD muy bajo - necesita subir
-                const tempIncrease = 2.0; // Subir 2°C
-                const vpdWithTempIncrease = calculateVPD(currentTemp + tempIncrease, currentHumidity);
-                
-                const humidityDecrease = 10; // Bajar 10%
-                const vpdWithHumidityDecrease = calculateVPD(currentTemp, currentHumidity - humidityDecrease);
-                
-                // Calcular impacto energético
-                const tempEnergyImpact = avgTotal > 6000 ? 'Deshumidificadores podrían aumentar +200W' : 
-                                       avgTotal > 4000 ? 'Deshumidificadores podrían aumentar +300W' : 
-                                       'Impacto energético bajo';
-                
-                const humidityEnergyImpact = avgTotal > 6000 ? 'Deshumidificadores podrían reducir -800W' : 
-                                           avgTotal > 4000 ? 'Deshumidificadores podrían reducir -500W' : 
-                                           avgTotal > 0 ? 'Deshumidificadores podrían reducir -200W' : 
-                                           'Deshumidificadores apagados - Sin impacto';
-
-                // Determinar prioridad basada en consumo actual
-                const energyPriority = avgTotal > 7000 ? '💰 AHORRO CRÍTICO' : avgTotal > 5000 ? '💡 AHORRO ALTO' : '⚡ AHORRO POSIBLE';
-
-                recommendations.push({
-                  status: 'low',
-                  priority: avgTotal > 7000 ? 'critical' : 'high',
-                  issue: `VPD muy bajo (${currentVPD.toFixed(2)} kPa) ${avgTotal > 6000 ? '- Alto consumo energético' : ''}`,
-                  energyStatus: energyPriority,
-                  options: [
-                    {
-                      action: `Subir temperatura +${tempIncrease}°C`,
-                      detail: `${currentTemp.toFixed(1)}°C → ${(currentTemp + tempIncrease).toFixed(1)}°C`,
-                      result: `VPD resultante: ${vpdWithTempIncrease.toFixed(2)} kPa`,
-                      energyImpact: tempEnergyImpact,
-                      feasibility: tempIncrease <= 3 ? 'fácil' : 'moderado',
-                      type: 'temperature',
-                      energyEfficient: avgTotal > 6000
-                    },
-                    {
-                      action: `Reducir humedad -${humidityDecrease}%`,
-                      detail: `${currentHumidity.toFixed(1)}% → ${(currentHumidity - humidityDecrease).toFixed(1)}%`,
-                      result: `VPD resultante: ${vpdWithHumidityDecrease.toFixed(2)} kPa`,
-                      energyImpact: humidityEnergyImpact,
-                      feasibility: currentHumidity - humidityDecrease > 50 ? 'fácil' : 'difícil',
-                      type: 'humidity',
-                      energyEfficient: avgTotal < 4000
-                    }
-                  ]
-                });
-              } else if (currentVPD > targetVPDMax) {
-                // VPD muy alto - necesita bajar
-                const tempDecrease = 2.0; // Bajar 2°C
-                const vpdWithTempDecrease = calculateVPD(currentTemp - tempDecrease, currentHumidity);
-                
-                const humidityIncrease = 10; // Subir 10%
-                const vpdWithHumidityIncrease = calculateVPD(currentTemp, currentHumidity + humidityIncrease);
-                
-                // Calcular impacto energético para VPD alto
-                const tempEnergyImpact = avgTotal > 6000 ? 'Deshumidificadores podrían reducir -400W' : 
-                                       avgTotal > 4000 ? 'Deshumidificadores podrían reducir -200W' : 
-                                       'Impacto energético mínimo';
-                
-                const humidityEnergyImpact = avgTotal > 6000 ? 'Deshumidificadores podrían aumentar +600W' : 
-                                           avgTotal > 4000 ? 'Deshumidificadores podrían aumentar +400W' : 
-                                           avgTotal > 0 ? 'Deshumidificadores podrían aumentar +200W' : 
-                                           'Deshumidificadores apagados - Sin impacto';
-
-                const energyPriority = avgTotal > 7000 ? '⚡ OPTIMIZAR CONSUMO' : avgTotal > 5000 ? '💡 MONITOREAR CONSUMO' : '🔋 CONSUMO CONTROLADO';
-
-                recommendations.push({
-                  status: 'high',
-                  priority: 'high',
-                  issue: `VPD muy alto (${currentVPD.toFixed(2)} kPa) ${avgTotal > 6000 ? '- Optimizar eficiencia' : ''}`,
-                  energyStatus: energyPriority,
-                  options: [
-                    {
-                      action: `Reducir temperatura -${tempDecrease}°C`,
-                      detail: `${currentTemp.toFixed(1)}°C → ${(currentTemp - tempDecrease).toFixed(1)}°C`,
-                      result: `VPD resultante: ${vpdWithTempDecrease.toFixed(2)} kPa`,
-                      energyImpact: tempEnergyImpact,
-                      feasibility: currentTemp - tempDecrease > 18 ? 'fácil' : 'difícil',
-                      type: 'temperature',
-                      energyEfficient: avgTotal > 5000
-                    },
-                    {
-                      action: `Aumentar humedad +${humidityIncrease}%`,
-                      detail: `${currentHumidity.toFixed(1)}% → ${(currentHumidity + humidityIncrease).toFixed(1)}%`,
-                      result: `VPD resultante: ${vpdWithHumidityIncrease.toFixed(2)} kPa`,
-                      energyImpact: humidityEnergyImpact,
-                      feasibility: currentHumidity + humidityIncrease < 90 ? 'fácil' : 'difícil',
-                      type: 'humidity',
-                      energyEfficient: avgTotal < 3000
-                    }
-                  ]
-                });
-              } else {
-                // VPD en rango óptimo
-                const energyEfficiencyStatus = avgTotal > 7000 ? '⚠️ Alto consumo - Revisar configuración' : 
-                                             avgTotal > 5000 ? '💡 Consumo moderado - Monitorear' : 
-                                             avgTotal > 2000 ? '✅ Consumo eficiente' : 
-                                             avgTotal > 0 ? '🟢 Consumo bajo' : '⚫ Deshumidificadores apagados';
-
-                recommendations.push({
-                  status: 'optimal',
-                  priority: avgTotal > 7000 ? 'medium' : 'low',
-                  issue: `VPD óptimo (${currentVPD.toFixed(2)} kPa)`,
-                  energyStatus: energyEfficiencyStatus,
-                  options: [
-                    {
-                      action: 'Mantener condiciones actuales',
-                      detail: `Temperatura: ${currentTemp.toFixed(1)}°C, Humedad: ${currentHumidity.toFixed(1)}%`,
-                      result: avgTotal > 7000 ? 'Monitorear consumo energético' : 'Condiciones ideales - Continuar monitoreo',
-                      energyImpact: `Consumo estable: ${avgTotal.toFixed(0)}W`,
-                      feasibility: 'fácil',
-                      type: 'maintain',
-                      energyEfficient: avgTotal < 5000
-                    }
-                  ]
-                });
-              }
-
-              return (
-                <div key={islandId} className="island-recommendation-card">
-                  <div className="island-header">
-                    <h4 className="island-title" style={{ color: islandColors[islandId as keyof typeof islandColors] }}>
-                      🏝️ Isla {islandId}
-                    </h4>
-                    <div className="dehumidifier-info">
-                      <div className="power-consumption">
-                        <span className="power-icon">💡</span>
-                        <span className="power-value">{avgTotal.toFixed(0)}W promedio</span>
-                        <span className={`consumption-badge ${consumptionStatus}`}>
-                          {consumptionStatus === 'critical' ? '🔴' : 
-                           consumptionStatus === 'high' ? '🟠' : 
-                           consumptionStatus === 'moderate' ? '🟡' : 
-                           consumptionStatus === 'low' ? '🟢' : '⚫'}
-                          {consumptionLabel}
-                        </span>
-                      </div>
-                      {avgTotal > 0 && (
-                        <div className="power-breakdown">
-                          <small>Oriente: {avgOriente.toFixed(0)}W | Poniente: {avgPoniente.toFixed(0)}W</small>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {recommendations.map((rec, recIndex) => (
-                    <div key={recIndex} className={`recommendation-content ${rec.status}`}>
-                      <div className="recommendation-issue">
-                        <span className={`status-badge ${rec.status}`}>
-                          {rec.status === 'low' ? '⬇️' : rec.status === 'high' ? '⬆️' : '✅'}
-                        </span>
-                        <span className="issue-text">{rec.issue}</span>
-                        <span className={`priority-badge ${rec.priority}`}>
-                          {rec.priority === 'critical' ? '🚨 CRÍTICO' : rec.priority === 'high' ? '🔴 URGENTE' : rec.priority === 'medium' ? '🟡 MEDIO' : '🟢 NORMAL'}
-                        </span>
-                      </div>
-
-                      {rec.energyStatus && (
-                        <div className="energy-status">
-                          <span className="energy-label">Estado Energético:</span>
-                          <span className="energy-value">{rec.energyStatus}</span>
-                        </div>
-                      )}
-
-                      <div className="recommendation-options">
-                        {rec.options.map((option, optIndex) => (
-                          <div key={optIndex} className={`option-card ${option.type} ${option.energyEfficient ? 'energy-efficient' : ''}`}>
-                            <div className="option-header">
-                              <span className="option-action">
-                                {option.energyEfficient && '⚡'} {option.action}
-                              </span>
-                              <div className="option-badges">
-                                <span className={`feasibility-badge ${option.feasibility}`}>
-                                  {option.feasibility === 'fácil' ? '🟢' : option.feasibility === 'moderado' ? '🟡' : '🔴'}
-                                  {option.feasibility}
-                                </span>
-                                {option.energyEfficient && (
-                                  <span className="efficiency-badge">
-                                    💚 Eficiente
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-                            <div className="option-details">
-                              <p className="option-detail">{option.detail}</p>
-                              <p className="option-result">{option.result}</p>
-                              {option.energyImpact && (
-                                <p className="option-energy-impact">
-                                  💡 {option.energyImpact}
-                                </p>
-                              )}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Gráfico Temperatura */}
-        <div className="clean-chart-container">
-          <div className="chart-header-clean">
-            <h3 className="chart-title-clean">
-              🌡️ Temperatura
-            </h3>
-            {(['full', 'day', 'night_stable'].includes(selectedPeriod)) && (
-              <div className="time-blocks-legend">
-                <small>
-                  🌙 Madrugada (23:00-02:00) | 🌅 Amanecer (02:01-05:00) | 
-                  ☀️ Día Activo (05:01-17:00) | 🌃 Noche Planta (17:01-22:59)
-                </small>
-              </div>
-            )}
-          </div>
-          
-          <div className="chart-wrapper-clean">
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart 
-                data={processedData}
-                margin={{ top: 10, right: 20, left: 10, bottom: 20 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" strokeOpacity={0.4} />
-                <XAxis 
-                  dataKey="time" 
-                  tick={{ fontSize: 11, fill: '#64748b' }}
-                  axisLine={{ stroke: '#cbd5e1' }}
-                  tickLine={{ stroke: '#cbd5e1' }}
-                  interval="preserveStartEnd"
-                />
-                <YAxis 
-                  domain={['dataMin - 1', 'dataMax + 1']}
-                  tick={{ fontSize: 11, fill: '#64748b' }}
-                  axisLine={{ stroke: '#cbd5e1' }}
-                  tickLine={{ stroke: '#cbd5e1' }}
-                  label={{ 
-                    value: 'Temperatura (°C)', 
-                    angle: -90, 
-                    position: 'insideLeft',
-                    style: { textAnchor: 'middle', fontSize: '12px', fill: '#475569' }
-                  }}
-                />
-                <Tooltip />
-                <Legend />
-                
-                {/* Líneas de referencia para temperatura óptima */}
-                <ReferenceLine 
-                  y={weekConf.tempMin} 
-                  stroke="#e74c3c" 
-                  strokeWidth={3}
-                  strokeDasharray="8 4" 
-                  strokeOpacity={0.9}
-                  label={{ 
-                    value: `Temp Min: ${weekConf.tempMin}°C`, 
-                    position: 'top',
-                    style: { fontSize: '11px', fill: '#e74c3c', fontWeight: 'bold' }
-                  }}
-                />
-                <ReferenceLine 
-                  y={weekConf.tempMax} 
-                  stroke="#e74c3c" 
-                  strokeWidth={3}
-                  strokeDasharray="8 4" 
-                  strokeOpacity={0.9}
-                  label={{ 
-                    value: `Temp Max: ${weekConf.tempMax}°C`, 
-                    position: 'top',
-                    style: { fontSize: '11px', fill: '#e74c3c', fontWeight: 'bold' }
-                  }}
-                />
-
-                {/* Divisiones temporales por bloques */}
-                {renderTimeBlockDivisions()}
-
-                {weekIslands.map(islandId => (
-                  <Line
-                    key={islandId}
-                    type="monotone"
-                    dataKey={`${islandId}_Temp`}
-                    stroke={islandColors[islandId as keyof typeof islandColors]}
-                    strokeWidth={2.5}
-                    name={`${islandId} Temp`}
-                    connectNulls={false}
-                    dot={false}
-                    activeDot={{ 
-                      r: 4, 
-                      fill: islandColors[islandId as keyof typeof islandColors],
-                      stroke: '#ffffff',
-                      strokeWidth: 2
-                    }}
-                  />
-                ))}
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-        {/* Gráfico Humedad */}
-        <div className="clean-chart-container">
-          <div className="chart-header-clean">
-            <h3 className="chart-title-clean">
-              💧 Humedad Relativa
-            </h3>
-            {(['full', 'day', 'night_stable'].includes(selectedPeriod)) && (
-              <div className="time-blocks-legend">
-                <small>
-                  🌙 Madrugada (23:00-02:00) | 🌅 Amanecer (02:01-05:00) | 
-                  ☀️ Día Activo (05:01-17:00) | 🌃 Noche Planta (17:01-22:59)
-                </small>
-              </div>
-            )}
-          </div>
-          
-          <div className="chart-wrapper-clean">
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart 
-                data={processedData}
-                margin={{ top: 10, right: 20, left: 10, bottom: 20 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" strokeOpacity={0.4} />
-                <XAxis 
-                  dataKey="time" 
-                  tick={{ fontSize: 11, fill: '#64748b' }}
-                  axisLine={{ stroke: '#cbd5e1' }}
-                  tickLine={{ stroke: '#cbd5e1' }}
-                  interval="preserveStartEnd"
-                />
-                <YAxis 
-                  domain={['dataMin - 2', 'dataMax + 2']}
-                  tick={{ fontSize: 11, fill: '#64748b' }}
-                  axisLine={{ stroke: '#cbd5e1' }}
-                  tickLine={{ stroke: '#cbd5e1' }}
-                  label={{ 
-                    value: 'Humedad (%)', 
-                    angle: -90, 
-                    position: 'insideLeft',
-                    style: { textAnchor: 'middle', fontSize: '12px', fill: '#475569' }
-                  }}
-                />
-                <Tooltip />
-                <Legend />
-                
-                {/* Líneas de referencia para humedad óptima */}
-                <ReferenceLine 
-                  y={weekConf.humidityMin} 
-                  stroke="#3498db" 
-                  strokeWidth={3}
-                  strokeDasharray="8 4" 
-                  strokeOpacity={0.9}
-                  label={{ 
-                    value: `HR Min: ${weekConf.humidityMin}%`, 
-                    position: 'top',
-                    style: { fontSize: '11px', fill: '#3498db', fontWeight: 'bold' }
-                  }}
-                />
-                <ReferenceLine 
-                  y={weekConf.humidityMax} 
-                  stroke="#3498db" 
-                  strokeWidth={3}
-                  strokeDasharray="8 4" 
-                  strokeOpacity={0.9}
-                  label={{ 
-                    value: `HR Max: ${weekConf.humidityMax}%`, 
-                    position: 'top',
-                    style: { fontSize: '11px', fill: '#3498db', fontWeight: 'bold' }
-                  }}
-                />
-
-                {/* Divisiones temporales por bloques */}
-                {renderTimeBlockDivisions()}
-
-                {weekIslands.map(islandId => (
-                  <Line
-                    key={islandId}
-                    type="monotone"
-                    dataKey={`${islandId}_Humidity`}
-                    stroke={islandColors[islandId as keyof typeof islandColors]}
-                    strokeWidth={2.5}
-                    name={`${islandId} HR`}
-                    connectNulls={false}
-                    dot={false}
-                    activeDot={{ 
-                      r: 4, 
-                      fill: islandColors[islandId as keyof typeof islandColors],
-                      stroke: '#ffffff',
-                      strokeWidth: 2
-                    }}
-                  />
-                ))}
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
+  // Renderizar controles locales
+  const renderLocalControls = () => (
+    <div className="temporal-controls">
+      <div className="control-group">
+        <label>Período de Análisis</label>
+        <div className="period-buttons">
+          <button
+            className={localPeriod === 'full' ? 'active' : ''}
+            onClick={() => {
+              setLocalPeriod('full');
+              setLocalTimeBlock(null);
+            }}
+          >
+            🕐 24 Horas
+          </button>
+          <button
+            className={localPeriod === 'day' ? 'active' : ''}
+            onClick={() => {
+              setLocalPeriod('day');
+              setLocalTimeBlock(null);
+            }}
+          >
+            ☀️ Día Planta
+          </button>
+          <button
+            className={localPeriod === 'night' ? 'active' : ''}
+            onClick={() => {
+              setLocalPeriod('night');
+              setLocalTimeBlock(null);
+            }}
+          >
+            🌙 Noche Planta
+          </button>
         </div>
       </div>
-    );
-  };
+
+      <div className="control-group">
+        <label>Bloques Temporales</label>
+        <div className="timeblock-buttons">
+          <button
+            className={localTimeBlock === null ? 'active' : ''}
+            onClick={() => setLocalTimeBlock(null)}
+          >
+            Todos
+          </button>
+          <button
+            className={localTimeBlock === 'dawn_cold' ? 'active' : ''}
+            onClick={() => setLocalTimeBlock('dawn_cold')}
+            title="23:00 - 02:00"
+          >
+            🌙 Madrugada
+          </button>
+          <button
+            className={localTimeBlock === 'night_deep' ? 'active' : ''}
+            onClick={() => setLocalTimeBlock('night_deep')}
+            title="02:01 - 08:00"
+          >
+            🌌 Noche Profunda
+          </button>
+          <button
+            className={localTimeBlock === 'morning' ? 'active' : ''}
+            onClick={() => setLocalTimeBlock('morning')}
+            title="08:01 - 12:00"
+          >
+            🌅 Amanecer
+          </button>
+          <button
+            className={localTimeBlock === 'day_active' ? 'active' : ''}
+            onClick={() => setLocalTimeBlock('day_active')}
+            title="12:01 - 17:00"
+          >
+            ☀️ Día Activo
+          </button>
+          <button
+            className={localTimeBlock === 'night_plant' ? 'active' : ''}
+            onClick={() => setLocalTimeBlock('night_plant')}
+            title="17:01 - 22:59"
+          >
+            🌃 Noche
+          </button>
+        </div>
+      </div>
+
+      <div className="control-group">
+        <label>
+          <input
+            type="checkbox"
+            checked={showEnergyData}
+            onChange={(e) => setShowEnergyData(e.target.checked)}
+          />
+          Mostrar Consumo Energético
+        </label>
+      </div>
+    </div>
+  );
+
+  // Renderizar estadísticas
+  const renderStatistics = () => (
+    <div className="statistics-grid">
+      {Object.entries(statistics).map(([island, stats]) => (
+        <div key={island} className="stat-card">
+          <h4 style={{ color: islandColors[island as keyof typeof islandColors] }}>
+            {island}
+          </h4>
+          <div className="stat-row">
+            <span>VPD Promedio:</span>
+            <strong>{stats.avg} kPa</strong>
+          </div>
+          <div className="stat-row">
+            <span>Rango:</span>
+            <strong>{stats.min} - {stats.max} kPa</strong>
+          </div>
+          <div className="stat-row">
+            <span>Tiempo óptimo:</span>
+            <strong className={parseFloat(stats.optimalPercentage) > 80 ? 'good' : 'warning'}>
+              {stats.optimalPercentage}%
+            </strong>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
 
   return (
-    <div className="vpd-evolution-chart">
-      {/* Análisis completo por semana */}
-      {[1, 2, 3].map(weekNumber => renderWeekChart(weekNumber))}
+    <div className="vpd-temporal-analysis">
+      <div className="analysis-header">
+        <h2>📈 Análisis Temporal de VPD</h2>
+        <p>Evolución del VPD a lo largo del tiempo con control por bloques temporales</p>
+      </div>
+
+      {renderLocalControls()}
+      {renderStatistics()}
+
+      <div className="chart-container">
+        <ResponsiveContainer width="100%" height={400}>
+          <ComposedChart data={processedData}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+            <XAxis 
+              dataKey="time" 
+              tick={{ fontSize: 12 }}
+              interval="preserveStartEnd"
+            />
+            <YAxis 
+              yAxisId="left"
+              label={{ value: 'VPD (kPa)', angle: -90, position: 'insideLeft' }}
+              domain={[0, 2]}
+              tick={{ fontSize: 12 }}
+            />
+            {showEnergyData && (
+              <YAxis 
+                yAxisId="right"
+                orientation="right"
+                label={{ value: 'Consumo (kW)', angle: 90, position: 'insideRight' }}
+                tick={{ fontSize: 12 }}
+              />
+            )}
+            
+            <Tooltip 
+              contentStyle={{ 
+                backgroundColor: 'rgba(255, 255, 255, 0.95)', 
+                border: '1px solid #ccc',
+                borderRadius: '8px'
+              }}
+              formatter={(value: any, name: string) => {
+                if (name.includes('VPD')) return [`${value?.toFixed(2)} kPa`, name];
+                if (name === 'totalConsumption') return [`${value?.toFixed(1)} kW`, 'Consumo'];
+                return [value, name];
+              }}
+            />
+            <Legend />
+
+            {/* Líneas de referencia para rangos óptimos */}
+            <ReferenceLine 
+              yAxisId="left"
+              y={weekConfig.optimalMin} 
+              stroke="#27ae60" 
+              strokeDasharray="5 5" 
+              label="Min Óptimo"
+            />
+            <ReferenceLine 
+              yAxisId="left"
+              y={weekConfig.optimalMax} 
+              stroke="#27ae60" 
+              strokeDasharray="5 5" 
+              label="Max Óptimo"
+            />
+
+            {/* Área de referencia para rango óptimo */}
+            <ReferenceArea
+              yAxisId="left"
+              y1={weekConfig.optimalMin}
+              y2={weekConfig.optimalMax}
+              stroke="none"
+              fill="#27ae60"
+              fillOpacity={0.1}
+            />
+
+            {/* Barras de consumo energético */}
+            {showEnergyData && (
+              <Bar
+                yAxisId="right"
+                dataKey="totalConsumption"
+                fill="#95a5a6"
+                fillOpacity={0.3}
+                name="Consumo Total"
+              />
+            )}
+
+            {/* Líneas de VPD para cada isla seleccionada */}
+            {Object.entries(selectedIslands).map(([island, selected]) => {
+              if (!selected) return null;
+              return (
+                <Line
+                  key={island}
+                  yAxisId="left"
+                  type="monotone"
+                  dataKey={`${island}_VPD`}
+                  stroke={islandColors[island as keyof typeof islandColors]}
+                  strokeWidth={2}
+                  dot={false}
+                  name={`${island} VPD`}
+                />
+              );
+            })}
+          </ComposedChart>
+        </ResponsiveContainer>
+      </div>
+
+      <div className="analysis-footer">
+        <p>💡 Rango óptimo {weekConfig.name}: {weekConfig.vpdRange} kPa</p>
+        <p>🎯 Enfoque: {weekConfig.focus}</p>
+      </div>
     </div>
   );
 };

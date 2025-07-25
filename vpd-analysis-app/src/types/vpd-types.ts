@@ -104,8 +104,11 @@ export interface VPDAnalysisResult {
 export type DayPeriod = 'day' | 'night' | 'full' | 'dawn_cold' | 'night_deep' | 'morning' | 'day_active' | 'night_plant' | 
                         'thermal_warmup' | 'thermal_rebound' | 'thermal_stabilization' | 'night_stable';
 
+// Tipo para bloques temporales
+export type TimeBlock = 'dawn_cold' | 'night_deep' | 'morning' | 'day_active' | 'night_plant';
+
 // Configuración de bloques temporales
-export interface TimeBlock {
+export interface TimeBlockInfo {
   id: string;
   name: string;
   icon: string;
@@ -119,7 +122,16 @@ export interface TimeBlock {
 }
 
 export interface TimeBlockConfig {
-  [key: string]: TimeBlock;
+  [key: string]: TimeBlockInfo;
+}
+
+// Extensión de VPDRecord con campos procesados
+export interface ProcessedVPDRecord extends VPDRecord {
+  dayPeriod?: 'day' | 'night';
+  timeBlock?: TimeBlock;
+  formattedTime?: string;
+  gradient?: number;
+  thermalStage?: string;
 }
 
 // Tipos para selección de islas

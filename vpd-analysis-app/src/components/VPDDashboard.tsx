@@ -1,19 +1,21 @@
 import React, { useState } from 'react';
-import { VPDData, WeekConfig, DayPeriod, IslandSelection, TimeBlock, TimeBlockConfig } from '../types/vpd-types';
-import VPDEvolutionChart from './VPDEvolutionChart';
+import { Clock, Table, Target, Thermometer } from 'lucide-react';
+import { VPDData, IslandSelection, WeekConfig } from '../types/vpd-types';
 import VPDTemporalAnalysis from './VPDTemporalAnalysis';
 import VPDAnalysisTable from './VPDAnalysisTable';
 import VPDOptimizer from './VPDOptimizer';
+import ThermalAnalysisPanel from './ThermalAnalysisPanel';
+import VPDConfigPanel from './VPDConfigPanel';
 import './VPDDashboard.css';
 
 interface VPDDashboardProps {
   data: VPDData;
 }
 
+type TabId = 'temporal' | 'analysis' | 'optimizer' | 'thermal';
+
 const VPDDashboard: React.FC<VPDDashboardProps> = ({ data }) => {
-  // Estados
-  const [selectedWeek, setSelectedWeek] = useState<number>(3);
-  const [selectedPeriod, setSelectedPeriod] = useState<DayPeriod>('full');
+  // Estados principales del dashboard
   const [selectedIslands, setSelectedIslands] = useState<IslandSelection>({
     I1: true,
     I2: true,
@@ -22,9 +24,13 @@ const VPDDashboard: React.FC<VPDDashboardProps> = ({ data }) => {
     I5: true,
     I6: true,
   });
-  const [activeTab, setActiveTab] = useState<'evolution' | 'temporal' | 'analysis' | 'optimizer'>('evolution');
+  const [activeTab, setActiveTab] = useState<TabId>('temporal');
+  const [configPanelOpen, setConfigPanelOpen] = useState<boolean>(false);
+  
+  // Estado de configuración de semanas
+  const [selectedWeek, setSelectedWeek] = useState<number>(3);
+  const [customWeekConfig, setCustomWeekConfig] = useState<WeekConfig | null>(null);
 
-  // Configuración de semanas (basado en tu HTML)
   // Configuración de semanas por isla basado en el estado real del cultivo
   const islandWeekAssignments = {
     I1: 3, // Week 3 - Máxima biomasa (Albahaca 100% ocupada)
@@ -102,330 +108,164 @@ const VPDDashboard: React.FC<VPDDashboardProps> = ({ data }) => {
     }
   };
 
-  const currentWeekConfig = weekConfigs[selectedWeek];
-
-  // Configuración de bloques temporales para control climático inteligente
-  const timeBlocks: TimeBlockConfig = {
-    dawn_cold: {
-      id: 'dawn_cold',
-      name: 'Madrugada',
-      icon: '🌙',
-      description: 'Período de madrugada',
-      startHour: 23,
-      endHour: 2,
-      duration: 3,
-      strategy: 'Condiciones estables nocturnas',
-      priority: 'balance',
-      color: '#2c3e50'
-    },
-    morning: {
-      id: 'morning',
-      name: 'Amanecer',
-      icon: '🌅',
-      description: 'Período de amanecer',
-      startHour: 2,
-      endHour: 5,
-      duration: 3,
-      strategy: 'Transición térmica gradual',
-      priority: 'temperature',
-      color: '#f39c12'
-    },
-    day_active: {
-      id: 'day_active',
-      name: 'Día Activo',
-      icon: '☀️',
-      description: 'Período principal diurno',
-      startHour: 5,
-      endHour: 17,
-      duration: 12,
-      strategy: 'Control activo de condiciones',
-      priority: 'temperature',
-      color: '#e67e22'
-    },
-    night_plant: {
-      id: 'night_plant',
-      name: 'Noche Planta',
-      icon: '🌃',
-      description: 'Período nocturno de la planta',
-      startHour: 17,
-      endHour: 23,
-      duration: 6,
-      strategy: 'Condiciones óptimas nocturnas',
-      priority: 'balance',
-      color: '#8e44ad'
-    },
-    night_deep: {
-      id: 'night_deep',
-      name: 'Noche Profunda',
-      icon: '🌌',
-      description: 'Análisis detallado nocturno',
-      startHour: 2,
-      endHour: 8,
-      duration: 6,
-      strategy: 'Análisis profundo nocturno',
-      priority: 'humidity',
-      color: '#34495e'
-    }
-  };
+  const currentWeekConfig = customWeekConfig || weekConfigs[selectedWeek];
 
   // Handlers
-  const handleWeekChange = (week: number) => {
-    setSelectedWeek(week);
+  const handleConfigChange = (newConfig: Partial<WeekConfig>) => {
+    const updatedConfig = { ...currentWeekConfig, ...newConfig };
+    setCustomWeekConfig(updatedConfig);
   };
 
+  const toggleConfigPanel = () => {
+    setConfigPanelOpen(!configPanelOpen);
+  };
 
-  return (
-    <div className="vpd-dashboard">
-      {/* Header */}
-      <div className="dashboard-header">
-        <h1>🌱 Análisis VPD - 21 Julio 2025</h1>
-        <p>Evolución temporal de {data.metadata.totalRecords} registros cada 5 minutos</p>
-      </div>
+  const handleWeekChange = (week: number) => {
+    setSelectedWeek(week);
+    setCustomWeekConfig(null); // Reset custom config when changing weeks
+  };
 
-      {/* Control Panel */}
-      <div className="control-panel">
-        {/* Bloque Selector */}
-        <div className="period-selector">
-          <h3>🕐 Análisis por Bloques Climáticos</h3>
-          <p className="period-description">Control inteligente dividido en 5 bloques temporales</p>
-          
-          {/* Botones de bloques principales */}
-          <div className="period-buttons">
-            <button
-              className={selectedPeriod === 'full' ? 'active full-day' : 'full-day'}
-              onClick={() => setSelectedPeriod('full')}
-            >
-              🕐 24 Horas Completas
-            </button>
-            <button
-              className={selectedPeriod === 'day' ? 'active day-plant' : 'day-plant'}
-              onClick={() => setSelectedPeriod('day')}
-            >
-              ☀️ Día Planta (18h)
-            </button>
-            <button
-              className={selectedPeriod === 'night_plant' ? 'active night-plant' : 'night-plant'}
-              onClick={() => setSelectedPeriod('night_plant')}
-            >
-              🌃 Noche Planta (6h)
-            </button>
-          </div>
+  // Definición de las pestañas
+  const tabs = [
+    { id: 'temporal' as const, label: 'Análisis Temporal', icon: Clock },
+    { id: 'analysis' as const, label: 'Tabla de Análisis', icon: Table },
+    { id: 'optimizer' as const, label: 'Optimizador VPD', icon: Target },
+    { id: 'thermal' as const, label: 'Análisis Térmico', icon: Thermometer },
+  ];
 
-          {/* Bloques detallados según pestaña activa */}
-          {activeTab === 'temporal' ? (
-            <div className="time-blocks-container">
-              <h4>🔥 Etapas del Ciclo Térmico Diario</h4>
-              <div className="time-blocks">
-                <button
-                  className={selectedPeriod === 'thermal_warmup' ? 'active time-block' : 'time-block'}
-                  onClick={() => setSelectedPeriod('thermal_warmup')}
-                  style={{ 
-                    borderLeft: '4px solid #2c3e50',
-                    backgroundColor: selectedPeriod === 'thermal_warmup' ? '#2c3e5015' : 'transparent'
-                  }}
-                >
-                  <div className="block-header">
-                    <span className="block-icon">🌙</span>
-                    <span className="block-name">Madrugada</span>
-                    <span className="block-duration">(3h)</span>
-                  </div>
-                  <div className="block-time">23:00 - 02:00</div>
-                  <div className="block-description">Período de madrugada</div>
-                  <div className="block-strategy">
-                    <span className="priority-indicator balance">⚖️</span>
-                    Condiciones estables nocturnas
-                  </div>
-                </button>
-
-                <button
-                  className={selectedPeriod === 'thermal_rebound' ? 'active time-block' : 'time-block'}
-                  onClick={() => setSelectedPeriod('thermal_rebound')}
-                  style={{ 
-                    borderLeft: '4px solid #f39c12',
-                    backgroundColor: selectedPeriod === 'thermal_rebound' ? '#f39c1215' : 'transparent'
-                  }}
-                >
-                  <div className="block-header">
-                    <span className="block-icon">🌅</span>
-                    <span className="block-name">Amanecer</span>
-                    <span className="block-duration">(3h)</span>
-                  </div>
-                  <div className="block-time">02:01 - 05:00</div>
-                  <div className="block-description">Período de amanecer</div>
-                  <div className="block-strategy">
-                    <span className="priority-indicator temperature">🌡️</span>
-                    Transición térmica gradual
-                  </div>
-                </button>
-
-                <button
-                  className={selectedPeriod === 'thermal_stabilization' ? 'active time-block' : 'time-block'}
-                  onClick={() => setSelectedPeriod('thermal_stabilization')}
-                  style={{ 
-                    borderLeft: '4px solid #e67e22',
-                    backgroundColor: selectedPeriod === 'thermal_stabilization' ? '#e67e2215' : 'transparent'
-                  }}
-                >
-                  <div className="block-header">
-                    <span className="block-icon">☀️</span>
-                    <span className="block-name">Día Activo</span>
-                    <span className="block-duration">(12h)</span>
-                  </div>
-                  <div className="block-time">05:01 - 17:00</div>
-                  <div className="block-description">Período principal diurno</div>
-                  <div className="block-strategy">
-                    <span className="priority-indicator temperature">🌡️</span>
-                    Control activo de condiciones
-                  </div>
-                </button>
-
-                <button
-                  className={selectedPeriod === 'night_stable' ? 'active time-block' : 'time-block'}
-                  onClick={() => setSelectedPeriod('night_stable')}
-                  style={{ 
-                    borderLeft: '4px solid #8e44ad',
-                    backgroundColor: selectedPeriod === 'night_stable' ? '#8e44ad15' : 'transparent'
-                  }}
-                >
-                  <div className="block-header">
-                    <span className="block-icon">🌃</span>
-                    <span className="block-name">Noche Planta</span>
-                    <span className="block-duration">(6h)</span>
-                  </div>
-                  <div className="block-time">17:01 - 22:59</div>
-                  <div className="block-description">Período nocturno de la planta</div>
-                  <div className="block-strategy">
-                    <span className="priority-indicator balance">⚖️</span>
-                    Condiciones óptimas nocturnas
-                  </div>
-                </button>
-              </div>
-            </div>
-          ) : (
-            <div className="time-blocks-container">
-              <h4>📊 Bloques del Día Planta (23:00-17:00)</h4>
-              <div className="time-blocks">
-                {Object.values(timeBlocks).filter(block => 
-                  block.id !== 'night_plant' && block.id !== 'night_deep'
-                ).map(block => (
-                <button
-                  key={block.id}
-                  className={selectedPeriod === block.id ? 'active time-block' : 'time-block'}
-                  onClick={() => setSelectedPeriod(block.id as DayPeriod)}
-                  style={{ 
-                    borderLeft: `4px solid ${block.color}`,
-                    backgroundColor: selectedPeriod === block.id ? `${block.color}15` : 'transparent'
-                  }}
-                >
-                  <div className="block-header">
-                    <span className="block-icon">{block.icon}</span>
-                    <span className="block-name">{block.name}</span>
-                    <span className="block-duration">({block.duration}h)</span>
-                  </div>
-                  <div className="block-time">
-                    {block.startHour}:00 - {block.endHour === 2 ? '02:00' : `${block.endHour}:00`}
-                  </div>
-                  <div className="block-description">{block.description}</div>
-                  <div className="block-strategy">
-                    <span className={`priority-indicator ${block.priority}`}>
-                      {block.priority === 'temperature' ? '🌡️' : block.priority === 'humidity' ? '💧' : '⚖️'}
-                    </span>
-                    {block.strategy}
-                  </div>
-                </button>
-              ))}
-              
-              {/* Noche Profunda como opción adicional */}
-              <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid #e2e8f0' }}>
-                <h5 style={{ margin: '0 0 8px 0', color: '#64748b', fontSize: '12px' }}>Análisis Adicional:</h5>
-                <button
-                  className={selectedPeriod === 'night_deep' ? 'active time-block' : 'time-block'}
-                  onClick={() => setSelectedPeriod('night_deep')}
-                  style={{ 
-                    borderLeft: '4px solid #34495e',
-                    backgroundColor: selectedPeriod === 'night_deep' ? '#34495e15' : 'transparent'
-                  }}
-                >
-                  <div className="block-header">
-                    <span className="block-icon">🌌</span>
-                    <span className="block-name">Noche Profunda</span>
-                    <span className="block-duration">(6h)</span>
-                  </div>
-                  <div className="block-time">02:01 - 08:00</div>
-                  <div className="block-description">Análisis detallado nocturno</div>
-                  <div className="block-strategy">
-                    <span className="priority-indicator humidity">💧</span>
-                    Análisis profundo nocturno
-                  </div>
-                </button>
-              </div>
-            </div>
-          </div>
-          )}
-        </div>
-      </div>
-
-      {/* Tab Navigation */}
-      <div className="tab-navigation">
-        <button
-          className={activeTab === 'evolution' ? 'active' : ''}
-          onClick={() => setActiveTab('evolution')}
-        >
-          📈 Evolución Temporal
-        </button>
-        <button
-          className={activeTab === 'temporal' ? 'active' : ''}
-          onClick={() => setActiveTab('temporal')}
-        >
-          🔥 Análisis Térmico
-        </button>
-        <button
-          className={activeTab === 'analysis' ? 'active' : ''}
-          onClick={() => setActiveTab('analysis')}
-        >
-          📊 Análisis por Isla
-        </button>
-        <button
-          className={activeTab === 'optimizer' ? 'active' : ''}
-          onClick={() => setActiveTab('optimizer')}
-        >
-          🎯 Optimizador VPD
-        </button>
-      </div>
-
-      {/* Tab Content */}
-      <div className="tab-content">
-        {activeTab === 'evolution' && (
-          <VPDEvolutionChart
-            data={data}
-            selectedIslands={selectedIslands}
-            selectedPeriod={selectedPeriod}
-            weekConfig={currentWeekConfig}
-          />
-        )}
-
-        {activeTab === 'temporal' && (
+  // Renderizar contenido de la pestaña activa
+  const renderTabContent = () => {
+    switch (activeTab) {
+      case 'temporal':
+        return (
           <VPDTemporalAnalysis
             data={data}
             selectedIslands={selectedIslands}
-            selectedPeriod={selectedPeriod}
             weekConfig={currentWeekConfig}
           />
-        )}
-
-        {activeTab === 'analysis' && (
+        );
+      case 'analysis':
+        return (
           <VPDAnalysisTable
             data={data}
+            selectedIslands={selectedIslands}
             weekConfig={currentWeekConfig}
           />
-        )}
-
-        {activeTab === 'optimizer' && (
+        );
+      case 'optimizer':
+        return (
           <VPDOptimizer
             data={data}
+            selectedIslands={selectedIslands}
             weekConfig={currentWeekConfig}
           />
-        )}
+        );
+      case 'thermal':
+        return (
+          <ThermalAnalysisPanel
+            selectedIslands={selectedIslands}
+          />
+        );
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <div className="vpd-dashboard">
+      {/* Panel de configuración VPD */}
+      <VPDConfigPanel
+        weekConfig={currentWeekConfig}
+        onConfigChange={handleConfigChange}
+        isOpen={configPanelOpen}
+        onToggle={toggleConfigPanel}
+      />
+
+      {/* Header principal */}
+      <div className="dashboard-header">
+        <h1>🌱 Sistema de Control VPD - Granja Vertical</h1>
+        <div className="header-info">
+          <span className="date-info">📅 {data.metadata.date}</span>
+          <span className="records-info">📊 {data.metadata.totalRecords} registros</span>
+        </div>
+      </div>
+
+      {/* Controles principales */}
+      <div className="main-controls">
+        {/* Selector de semanas */}
+        <div className="week-selector">
+          <h3>📆 Semana de Cultivo</h3>
+          <div className="week-buttons">
+            {Object.entries(weekConfigs).map(([week, config]) => (
+              <button
+                key={week}
+                className={`week-button ${selectedWeek === parseInt(week) ? 'active' : ''}`}
+                onClick={() => handleWeekChange(parseInt(week))}
+                style={{ borderColor: config.color }}
+              >
+                <span className="week-icon">{config.icon}</span>
+                <span className="week-name">{config.name}</span>
+                <span className="week-vpd">{config.vpdRange} kPa</span>
+              </button>
+            ))}
+          </div>
+          <button className="config-toggle" onClick={toggleConfigPanel}>
+            ⚙️ Configurar Rangos
+          </button>
+        </div>
+
+        {/* Selector de islas */}
+        <div className="island-selector">
+          <h3>🏝️ Islas de Cultivo</h3>
+          <div className="island-checkboxes">
+            {Object.keys(selectedIslands).map((island) => (
+              <label key={island} className="island-checkbox">
+                <input
+                  type="checkbox"
+                  checked={selectedIslands[island as keyof IslandSelection]}
+                  onChange={(e) => {
+                    setSelectedIslands({
+                      ...selectedIslands,
+                      [island]: e.target.checked,
+                    });
+                  }}
+                />
+                <span className={`island-label island-${island.toLowerCase()}`}>
+                  {island}
+                  <span className="island-week">
+                    {weekConfigs[islandWeekAssignments[island as keyof typeof islandWeekAssignments]].icon}
+                  </span>
+                </span>
+              </label>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Pestañas de análisis */}
+      <div className="analysis-tabs">
+        <div className="tab-header">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              className={`tab-button ${activeTab === tab.id ? 'active' : ''}`}
+              onClick={() => setActiveTab(tab.id)}
+            >
+              <tab.icon size={20} />
+              <span>{tab.label}</span>
+            </button>
+          ))}
+        </div>
+        
+        <div className="tab-content">
+          {renderTabContent()}
+        </div>
+      </div>
+
+      {/* Footer con información */}
+      <div className="dashboard-footer">
+        <p>💡 Cada pestaña tiene sus propios controles de período y filtros temporales</p>
+        <p>🔄 Los datos se actualizan cada 5 minutos | ⚡ Modo eficiencia energética activo</p>
       </div>
     </div>
   );

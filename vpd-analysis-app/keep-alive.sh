@@ -21,7 +21,7 @@ start_app() {
     export BROWSER=none
     export WDS_SOCKET_PORT=0
     
-    npm start &
+    npm run dev-stable &
     APP_PID=$!
     echo "🚀 Aplicación iniciada con PID: $APP_PID"
 }

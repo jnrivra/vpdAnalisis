@@ -479,6 +479,54 @@ const VPDEvolutionChart: React.FC<VPDEvolutionChartProps> = ({
                 : 0;
               const avgTotal = avgOriente + avgPoniente;
 
+              // Calcular tiempo de actividad por deshumidificador
+              const calculateActivityTime = (consumptionData: { oriente: number; poniente: number }[]) => {
+                if (consumptionData.length === 0) return { oriente: { active: 0, defrost: 0, off: 0 }, poniente: { active: 0, defrost: 0, off: 0 } };
+                
+                const totalRecords = consumptionData.length;
+                const orienteStats = { active: 0, defrost: 0, off: 0 };
+                const ponenteStats = { active: 0, defrost: 0, off: 0 };
+                
+                consumptionData.forEach(record => {
+                  // Clasificar Oriente
+                  if (record.oriente > 4000) orienteStats.active++;
+                  else if (record.oriente >= 400 && record.oriente <= 800) orienteStats.defrost++;
+                  else if (record.oriente >= 0 && record.oriente <= 50) orienteStats.off++;
+                  
+                  // Clasificar Poniente
+                  if (record.poniente > 4000) ponenteStats.active++;
+                  else if (record.poniente >= 400 && record.poniente <= 800) ponenteStats.defrost++;
+                  else if (record.poniente >= 0 && record.poniente <= 50) ponenteStats.off++;
+                });
+                
+                // Convertir a porcentajes
+                return {
+                  oriente: {
+                    active: Math.round((orienteStats.active / totalRecords) * 100),
+                    defrost: Math.round((orienteStats.defrost / totalRecords) * 100),
+                    off: Math.round((orienteStats.off / totalRecords) * 100)
+                  },
+                  poniente: {
+                    active: Math.round((ponenteStats.active / totalRecords) * 100),
+                    defrost: Math.round((ponenteStats.defrost / totalRecords) * 100),
+                    off: Math.round((ponenteStats.off / totalRecords) * 100)
+                  }
+                };
+              };
+
+              // Obtener todos los datos de consumo para el período
+              const allDehumidifierData = processedData.map(record => {
+                const orienteKey = `${islandId}_Oriente`;
+                const ponenteKey = `${islandId}_Poniente`;
+                
+                const oriente = data.data.find(d => d.time === record.fullTime)?.dehumidifiers?.[orienteKey] || 0;
+                const poniente = data.data.find(d => d.time === record.fullTime)?.dehumidifiers?.[ponenteKey] || 0;
+                
+                return { oriente, poniente };
+              });
+
+              const activityAnalysis = calculateActivityTime(allDehumidifierData);
+
               // Determinar estado de consumo
               const consumptionStatus = avgTotal > 8000 ? 'critical' : avgTotal > 6000 ? 'high' : avgTotal > 4000 ? 'moderate' : avgTotal > 0 ? 'low' : 'off';
               const consumptionLabel = consumptionStatus === 'critical' ? 'CRÍTICO' : 
@@ -701,6 +749,95 @@ const VPDEvolutionChart: React.FC<VPDEvolutionChartProps> = ({
                       </div>
                     </div>
                   ))}
+
+                  {/* Análisis de Tiempo de Actividad */}
+                  <div className="activity-analysis">
+                    <div className="activity-header">
+                      <h4 className="activity-title">
+                        ⏱️ Tiempo de Actividad - Período: {getPeriodName(selectedPeriod)}
+                      </h4>
+                    </div>
+                    
+                    <div className="dehumidifier-activity">
+                      <div className="oriente-activity">
+                        <div className="activity-label">
+                          <span className="orientation-icon">🌅</span>
+                          <span className="orientation-name">Oriente:</span>
+                        </div>
+                        <div className="activity-bars">
+                          <div className="activity-item active">
+                            <span className="activity-indicator">🟢</span>
+                            <span className="activity-text">Activo: {activityAnalysis.oriente.active}%</span>
+                            <div className="activity-bar">
+                              <div 
+                                className="activity-fill active" 
+                                style={{ width: `${activityAnalysis.oriente.active}%` }}
+                              ></div>
+                            </div>
+                          </div>
+                          <div className="activity-item defrost">
+                            <span className="activity-indicator">🟡</span>
+                            <span className="activity-text">Defrost: {activityAnalysis.oriente.defrost}%</span>
+                            <div className="activity-bar">
+                              <div 
+                                className="activity-fill defrost" 
+                                style={{ width: `${activityAnalysis.oriente.defrost}%` }}
+                              ></div>
+                            </div>
+                          </div>
+                          <div className="activity-item off">
+                            <span className="activity-indicator">⚫</span>
+                            <span className="activity-text">Apagado: {activityAnalysis.oriente.off}%</span>
+                            <div className="activity-bar">
+                              <div 
+                                className="activity-fill off" 
+                                style={{ width: `${activityAnalysis.oriente.off}%` }}
+                              ></div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="poniente-activity">
+                        <div className="activity-label">
+                          <span className="orientation-icon">🌇</span>
+                          <span className="orientation-name">Poniente:</span>
+                        </div>
+                        <div className="activity-bars">
+                          <div className="activity-item active">
+                            <span className="activity-indicator">🟢</span>
+                            <span className="activity-text">Activo: {activityAnalysis.poniente.active}%</span>
+                            <div className="activity-bar">
+                              <div 
+                                className="activity-fill active" 
+                                style={{ width: `${activityAnalysis.poniente.active}%` }}
+                              ></div>
+                            </div>
+                          </div>
+                          <div className="activity-item defrost">
+                            <span className="activity-indicator">🟡</span>
+                            <span className="activity-text">Defrost: {activityAnalysis.poniente.defrost}%</span>
+                            <div className="activity-bar">
+                              <div 
+                                className="activity-fill defrost" 
+                                style={{ width: `${activityAnalysis.poniente.defrost}%` }}
+                              ></div>
+                            </div>
+                          </div>
+                          <div className="activity-item off">
+                            <span className="activity-indicator">⚫</span>
+                            <span className="activity-text">Apagado: {activityAnalysis.poniente.off}%</span>
+                            <div className="activity-bar">
+                              <div 
+                                className="activity-fill off" 
+                                style={{ width: `${activityAnalysis.poniente.off}%` }}
+                              ></div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               );
             })}

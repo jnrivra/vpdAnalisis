@@ -23,9 +23,11 @@
   },
   "scripts": {
     "start": "react-scripts start",
+    "start-stable": "CI=false GENERATE_SOURCEMAP=false SKIP_PREFLIGHT_CHECK=true FAST_REFRESH=true ESLINT_NO_DEV_ERRORS=true TSC_COMPILE_ON_ERROR=true DISABLE_ESLINT_PLUGIN=true PORT=3002 BROWSER=none react-scripts start",
     "start-dynamic": "CI=false GENERATE_SOURCEMAP=false SKIP_PREFLIGHT_CHECK=true FAST_REFRESH=true PORT=3002 BROWSER=none react-scripts start",
     "dev": "./start-dev.sh",
     "dev-stable": "CI=false GENERATE_SOURCEMAP=false SKIP_PREFLIGHT_CHECK=true FAST_REFRESH=true ESLINT_NO_DEV_ERRORS=true TSC_COMPILE_ON_ERROR=true DISABLE_ESLINT_PLUGIN=true PORT=3002 BROWSER=none react-scripts start",
+    "keep-alive": "./keep-alive.sh",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
