@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { VPDData, WeekConfig } from '../types/vpd-types';
+import { VPDData, WeekConfig, IslandSelection } from '../types/vpd-types';
 import { 
   ScatterChart, 
   Scatter, 
@@ -14,10 +14,11 @@ import {
 
 interface VPDOptimizerProps {
   data: VPDData;
+  selectedIslands: IslandSelection;
   weekConfig: WeekConfig;
 }
 
-const VPDOptimizer: React.FC<VPDOptimizerProps> = ({ data, weekConfig }) => {
+const VPDOptimizer: React.FC<VPDOptimizerProps> = ({ data, selectedIslands, weekConfig }) => {
   // Configuración de semanas por isla
   const islandWeekAssignments = {
     I1: 3, // Week 3 - Máxima biomasa (Albahaca 100% ocupada)

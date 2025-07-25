@@ -6,7 +6,7 @@
  * una interfaz unificada para todos los componentes.
  */
 
-import { VPDData, VPDRecord, TimeBlock } from '../types/vpd-types';
+import { VPDData, VPDRecord, TimeBlock, IslandId } from '../types/vpd-types';
 
 class VPDDataService {
   private static instance: VPDDataService;
@@ -145,7 +145,7 @@ class VPDDataService {
   /**
    * Obtiene estadísticas precalculadas para un conjunto de datos
    */
-  calculateStatistics(records: VPDRecord[], islandIds: string[]) {
+  calculateStatistics(records: VPDRecord[], islandIds: IslandId[]) {
     const stats: any = {};
     
     islandIds.forEach(islandId => {
@@ -208,7 +208,7 @@ class VPDDataService {
   /**
    * Obtiene datos para análisis térmico
    */
-  async getThermalAnalysisData(islandId: string): Promise<any> {
+  async getThermalAnalysisData(islandId: IslandId): Promise<any> {
     const data = await this.getData();
     
     // Calcular gradientes térmicos
@@ -252,7 +252,7 @@ export const getDataByPeriod = (period: 'day' | 'night' | 'full') =>
   vpdDataService.getDataByPeriod(period);
 export const getDataByTimeBlock = (block: TimeBlock) => 
   vpdDataService.getDataByTimeBlock(block);
-export const calculateStatistics = (records: VPDRecord[], islandIds: string[]) =>
+export const calculateStatistics = (records: VPDRecord[], islandIds: IslandId[]) =>
   vpdDataService.calculateStatistics(records, islandIds);
-export const getThermalAnalysisData = (islandId: string) =>
+export const getThermalAnalysisData = (islandId: IslandId) =>
   vpdDataService.getThermalAnalysisData(islandId);

@@ -108,7 +108,7 @@ const VPDTemporalAnalysis: React.FC<VPDTemporalAnalysisProps> = ({
 
   // Calcular estadísticas
   const statistics = useMemo(() => {
-    const stats: any = {};
+    const stats: { [key: string]: { avg: string; min: string; max: string; optimalPercentage: string } } = {};
     const activeIslands = Object.entries(selectedIslands)
       .filter(([_, selected]) => selected)
       .map(([island]) => island);

@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ReferenceLine, ResponsiveContainer, Area } from 'recharts';
 import { Thermometer, TrendingUp, Activity, AlertCircle, Clock, Target } from 'lucide-react';
 import { useVPDData, useThermalAnalysisData } from '../hooks/useVPDData';
-import { DayPeriod, TimeBlock, IslandSelection } from '../types/vpd-types';
+import { DayPeriod, TimeBlock, IslandSelection, IslandId } from '../types/vpd-types';
 import './ThermalAnalysisPanel.css';
 
 interface ThermalAnalysisPanelProps {
@@ -24,7 +24,7 @@ const ThermalAnalysisPanel: React.FC<ThermalAnalysisPanelProps> = ({ selectedIsl
     .map(([island]) => island);
   
   // Obtener datos de análisis térmico para la primera isla seleccionada
-  const primaryIsland = activeIslands[0] || 'I1';
+  const primaryIsland = (activeIslands[0] || 'I1') as IslandId;
   const { data: thermalData } = useThermalAnalysisData(primaryIsland);
 
   // Procesar datos según el período seleccionado

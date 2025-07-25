@@ -6,7 +6,7 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import { VPDData, VPDRecord, TimeBlock } from '../types/vpd-types';
+import { VPDData, VPDRecord, TimeBlock, IslandId } from '../types/vpd-types';
 import { vpdDataService } from '../services/dataService';
 
 interface UseVPDDataResult {
@@ -106,7 +106,7 @@ export const useVPDDataByTimeBlock = (block: TimeBlock) => {
 /**
  * Hook para obtener datos de análisis térmico
  */
-export const useThermalAnalysisData = (islandId: string) => {
+export const useThermalAnalysisData = (islandId: IslandId) => {
   const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
@@ -136,7 +136,7 @@ export const useThermalAnalysisData = (islandId: string) => {
 /**
  * Hook para calcular estadísticas
  */
-export const useVPDStatistics = (records: VPDRecord[], islandIds: string[]) => {
+export const useVPDStatistics = (records: VPDRecord[], islandIds: IslandId[]) => {
   const [stats, setStats] = useState<any>(null);
 
   useEffect(() => {

@@ -1,12 +1,13 @@
 import React, { useMemo } from 'react';
-import { VPDData, WeekConfig } from '../types/vpd-types';
+import { VPDData, WeekConfig, IslandSelection } from '../types/vpd-types';
 
 interface VPDAnalysisTableProps {
   data: VPDData;
+  selectedIslands: IslandSelection;
   weekConfig: WeekConfig;
 }
 
-const VPDAnalysisTable: React.FC<VPDAnalysisTableProps> = ({ data, weekConfig }) => {
+const VPDAnalysisTable: React.FC<VPDAnalysisTableProps> = ({ data, selectedIslands, weekConfig }) => {
   // Configuración de semanas por isla basado en el estado real del cultivo
   const islandWeekAssignments = {
     I1: 3, // Week 3 - Máxima biomasa (Albahaca 100% ocupada)
