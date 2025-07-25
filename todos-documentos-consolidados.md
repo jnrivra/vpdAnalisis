@@ -1,5 +1,8 @@
 # TODOS LOS DOCUMENTOS - PROYECTO CONTROL VPD GRANJA VERTICAL
 
+> **Última actualización**: Julio 25, 2025
+> **Versión**: 2.2.0 - Control Panel con Análisis Térmico Avanzado
+
 ---
 ## DOCUMENTO: 00_INDICE_DOCUMENTOS.md
 ---

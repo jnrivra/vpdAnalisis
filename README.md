@@ -1,14 +1,37 @@
-# 🌱 VPD Analysis App - Sistema Inteligente de Análisis de Déficit de Presión de Vapor
+# 🌱 Sistema de Control VPD - Granja Vertical Agrourbana
 
 [![React](https://img.shields.io/badge/React-19.1.0-blue.svg)](https://reactjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-4.9.5-blue.svg)](https://www.typescriptlang.org/)
 [![Recharts](https://img.shields.io/badge/Recharts-3.1.0-orange.svg)](https://recharts.org/)
+[![Version](https://img.shields.io/badge/Version-2.2.0-green.svg)](https://github.com/jnrivra/vpdAnalisis)
+[![Status](https://img.shields.io/badge/Status-Production-success.svg)](https://github.com/jnrivra/vpdAnalisis)
 
-> **Sistema profesional de análisis y optimización de VPD para cultivos hidropónicos indoor**
+> **Sistema inteligente de control climático para optimización del Déficit de Presión de Vapor (VPD) en cultivos hidropónicos con análisis térmico avanzado y gestión energética**
+
+## 🆕 Actualizaciones Recientes (v2.2.0 - Julio 25, 2025)
+
+### ✨ Control Panel - Análisis Térmico Avanzado
+- **4 Etapas del Ciclo Térmico**: Calentamiento matutino, estabilidad diurna, enfriamiento vespertino y estabilidad nocturna
+- **Gradientes Térmicos**: Monitoreo de tasas de cambio (°C/hora) con alertas
+- **Integral Térmica Diaria**: Cálculo de grados-día acumulados
+- **Métricas Avanzadas**: Amplitud térmica, tiempo en rango óptimo, uniformidad
+
+### 🎨 Mejoras Visuales
+- **Franjas Verticales**: Separación clara entre bloques temporales
+- **Áreas Sombreadas**: Identificación visual de períodos climáticos
+- **Tooltips Mejorados**: Información detallada al hover
+- **Rendimiento Optimizado**: Carga más rápida y menor uso de memoria
+
+### ⚡ Sistema de 5 Bloques Temporales
+- 🌙 **Madrugada Fría** (23:00-02:00): Prioridad en temperatura
+- 🌌 **Noche Profunda** (02:01-08:00): Prioridad en humedad
+- 🌅 **Amanecer** (08:01-12:00): Balance óptimo
+- ☀️ **Día Activo** (12:01-17:00): Máxima fotosíntesis
+- 🌃 **Noche Planta** (17:01-22:59): Preparación para descanso
 
 ## 📖 Descripción
 
-Aplicación web desarrollada en React/TypeScript que permite monitorear, analizar y optimizar el **Déficit de Presión de Vapor (VPD)** en sistemas de cultivo hidropónico. Diseñada específicamente para el manejo de múltiples islas de cultivo con análisis inteligente basado en períodos circadianos de las plantas.
+Aplicación web desarrollada en React/TypeScript que permite monitorear, analizar y optimizar el **Déficit de Presión de Vapor (VPD)** en sistemas de cultivo hidropónico. Diseñada específicamente para el manejo de múltiples islas de cultivo con análisis inteligente basado en períodos circadianos de las plantas y ahora con análisis térmico avanzado para optimización energética.
 
 ## 🏗️ Arquitectura del Sistema
 
@@ -297,19 +320,25 @@ npm run build --analyze
 
 ## 📊 Roadmap
 
-### v2.0 - Próximas Funcionalidades
-- [ ] 📡 Integración IoT en tiempo real
+### ✅ v2.2.0 - Completado (Julio 2025)
+- [x] 🌡️ Control Panel con análisis térmico avanzado
+- [x] 📊 Sistema de 5 bloques temporales
+- [x] 🎨 Mejoras visuales con franjas verticales
+- [x] ⚡ Optimización de rendimiento
+- [x] 📈 Análisis energético mejorado
+
+### 🚧 v2.3.0 - En Desarrollo (Q3 2025)
+- [ ] 📡 API REST para datos en tiempo real
+- [ ] 📧 Sistema de alertas push/SMS
+- [ ] 📊 Exportar reportes PDF
+- [ ] 🔍 Búsqueda avanzada en datos históricos
+
+### 🔮 v3.0.0 - Futuro (Q4 2025)
 - [ ] 🤖 Machine Learning para predicciones
 - [ ] 📱 App móvil React Native
-- [ ] ☁️ Sincronización cloud
-- [ ] 📧 Alertas automáticas por email/SMS
+- [ ] ☁️ Sincronización cloud multi-granja
+- [ ] 🎯 Automatización completa de control
 - [ ] 📈 Dashboard ejecutivo avanzado
-
-### v1.5 - Mejoras Planificadas
-- [ ] 🎨 Temas personalizables
-- [ ] 📊 Exportar reportes PDF
-- [ ] 🔍 Búsqueda avanzada en datos
-- [ ] ⚙️ Configuración por usuario
 
 ## 📄 Licencia
 
