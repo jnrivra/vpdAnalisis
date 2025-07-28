@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { VPDData, WeekConfig } from '../types/vpd-types';
 import VPDTemporalAnalysis from './VPDTemporalAnalysis';
+import VPDSmartAnalysis from './VPDSmartAnalysis';
 import VPDConfigPanel from './VPDConfigPanel';
 import './VPDDashboard.css';
 
@@ -11,6 +12,7 @@ interface VPDDashboardProps {
 const VPDDashboard: React.FC<VPDDashboardProps> = ({ data }) => {
   // Estado principal simplificado
   const [configPanelOpen, setConfigPanelOpen] = useState<boolean>(false);
+  const [activeTab, setActiveTab] = useState<'temporal' | 'smart'>('temporal');
   
   // Estado de configuración VPD global (solo para panel de configuración)
   const [selectedWeek] = useState<number>(3);
@@ -118,9 +120,26 @@ const VPDDashboard: React.FC<VPDDashboardProps> = ({ data }) => {
         </div>
       </div>
 
-      {/* Contenido principal - Análisis Temporal */}
+      {/* Sistema de pestañas */}
+      <div className="tab-navigation">
+        <button 
+          className={`tab-button ${activeTab === 'temporal' ? 'active' : ''}`}
+          onClick={() => setActiveTab('temporal')}
+        >
+          📈 Análisis Temporal
+        </button>
+        <button 
+          className={`tab-button ${activeTab === 'smart' ? 'active' : ''}`}
+          onClick={() => setActiveTab('smart')}
+        >
+          🤖 Análisis Inteligente
+        </button>
+      </div>
+
+      {/* Contenido principal según pestaña activa */}
       <div className="main-content">
-        <VPDTemporalAnalysis data={data} />
+        {activeTab === 'temporal' && <VPDTemporalAnalysis data={data} />}
+        {activeTab === 'smart' && <VPDSmartAnalysis data={data} />}
       </div>
 
       {/* Footer actualizado */}

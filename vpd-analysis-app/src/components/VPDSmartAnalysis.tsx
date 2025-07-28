@@ -75,12 +75,22 @@ const VPDSmartAnalysis: React.FC<VPDTemporalAnalysisProps> = ({
     });
   };
 
+  // Función para obtener color más oscuro
+  const getCropColorDark = (color: string): string => {
+    const colorMap: { [key: string]: string } = {
+      '#059669': '#047857', // albahaca
+      '#7c3aed': '#6d28d9', // lechuga
+      '#dc2626': '#b91c1c'  // mixto
+    };
+    return colorMap[color] || color;
+  };
+
   // Configuraciones específicas por tipo de cultivo
   const cropTypeConfigs = {
     albahaca: {
       name: 'Albahaca',
       icon: '🌿',
-      color: '#27ae60',
+      color: '#059669', // Verde esmeralda profesional
       weeks: {
         0: { vpdRange: 'N/A', optimalMin: 0.5, optimalMax: 1.5, focus: 'Sin cultivo' },
         1: { vpdRange: '1.05-1.15', optimalMin: 1.05, optimalMax: 1.15, focus: 'Germinación albahaca' },
@@ -91,7 +101,7 @@ const VPDSmartAnalysis: React.FC<VPDTemporalAnalysisProps> = ({
     lechuga: {
       name: 'Lechuga',
       icon: '🥬',
-      color: '#2ecc71',
+      color: '#7c3aed', // Violeta profesional para mejor diferenciación
       weeks: {
         0: { vpdRange: 'N/A', optimalMin: 0.5, optimalMax: 1.5, focus: 'Sin cultivo' },
         1: { vpdRange: '0.95-1.05', optimalMin: 0.95, optimalMax: 1.05, focus: 'Germinación lechuga' },
@@ -102,7 +112,7 @@ const VPDSmartAnalysis: React.FC<VPDTemporalAnalysisProps> = ({
     mixto: {
       name: 'Mixto',
       icon: '🌱',
-      color: '#f39c12',
+      color: '#dc2626', // Rojo profesional para máximo contraste
       weeks: {
         0: { vpdRange: 'N/A', optimalMin: 0.5, optimalMax: 1.5, focus: 'Sin cultivo' },
         1: { vpdRange: '1.00-1.10', optimalMin: 1.00, optimalMax: 1.10, focus: 'Establecimiento general' },
@@ -407,10 +417,10 @@ const VPDSmartAnalysis: React.FC<VPDTemporalAnalysisProps> = ({
                         }`}
                         onClick={() => updateIslandCropType(island, cropType as 'albahaca' | 'lechuga' | 'mixto')}
                         style={{ 
-                          borderColor: config.color,
-                          backgroundColor: currentCropType === cropType 
-                            ? config.color + '20' : 'transparent'
-                        }}
+                          '--crop-color': config.color,
+                          '--crop-color-dark': getCropColorDark(config.color),
+                          borderColor: currentCropType === cropType ? config.color : '#e2e8f0'
+                        } as React.CSSProperties}
                         title={config.name}
                       >
                         <span className="crop-icon">{config.icon}</span>
@@ -432,10 +442,10 @@ const VPDSmartAnalysis: React.FC<VPDTemporalAnalysisProps> = ({
                         }`}
                         onClick={() => updateIslandWeek(island, parseInt(week))}
                         style={{ 
-                          borderColor: cropConfig.color,
-                          backgroundColor: currentWeek === parseInt(week) 
-                            ? cropConfig.color + '20' : 'transparent'
-                        }}
+                          '--crop-color': cropConfig.color,
+                          '--crop-color-dark': getCropColorDark(cropConfig.color),
+                          borderColor: currentWeek === parseInt(week) ? cropConfig.color : '#e2e8f0'
+                        } as React.CSSProperties}
                         title={`Semana ${week} - ${weekConf.vpdRange} kPa - ${weekConf.focus}`}
                       >
                         <span className="week-icon-complete">

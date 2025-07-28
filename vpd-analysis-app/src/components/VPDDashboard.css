@@ -1,5 +1,15 @@
 /* VPD Dashboard Styles */
 
+/* CSS Variables for Crop Colors */
+:root {
+  --albahaca-color: #059669;
+  --albahaca-color-dark: #047857;
+  --lechuga-color: #7c3aed;
+  --lechuga-color-dark: #6d28d9;
+  --mixto-color: #dc2626;
+  --mixto-color-dark: #b91c1c;
+}
+
 /* Dashboard Container */
 .vpd-dashboard {
   min-height: 100vh;
@@ -2925,23 +2935,39 @@
   align-items: center;
   gap: 6px;
   padding: 8px 12px;
-  border: 2px solid #ddd;
+  border: 2px solid #e2e8f0;
   border-radius: 8px;
   background: white;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
   font-size: 13px;
+  position: relative;
+  overflow: hidden;
 }
 
 .crop-type-btn:hover {
   transform: translateY(-1px);
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  background: #f8fafc;
 }
 
 .crop-type-btn.active {
   border-width: 2px;
   font-weight: 600;
   transform: scale(1.02);
+  color: white;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+}
+
+.crop-type-btn.active::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, var(--crop-color) 0%, var(--crop-color-dark) 100%);
+  z-index: -1;
 }
 
 .crop-icon {
@@ -2968,23 +2994,39 @@
   align-items: center;
   gap: 8px;
   padding: 10px 8px;
-  border: 2px solid #ddd;
+  border: 2px solid #e2e8f0;
   border-radius: 8px;
   background: white;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
   text-align: left;
+  position: relative;
+  overflow: hidden;
 }
 
 .week-btn-complete:hover {
   transform: translateY(-1px);
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  background: #f8fafc;
 }
 
 .week-btn-complete.active {
   border-width: 2px;
   font-weight: 600;
   transform: scale(1.02);
+  color: white;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+}
+
+.week-btn-complete.active::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, var(--crop-color) 0%, var(--crop-color-dark) 100%);
+  z-index: -1;
 }
 
 .week-icon-complete {
