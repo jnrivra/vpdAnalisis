@@ -419,7 +419,9 @@ const VPDSmartAnalysis: React.FC<VPDTemporalAnalysisProps> = ({
                         style={{ 
                           '--crop-color': config.color,
                           '--crop-color-dark': getCropColorDark(config.color),
-                          borderColor: currentCropType === cropType ? config.color : '#e2e8f0'
+                          borderColor: currentCropType === cropType ? config.color : '#e2e8f0',
+                          backgroundColor: currentCropType === cropType ? config.color : 'white',
+                          color: currentCropType === cropType ? 'white' : '#374151'
                         } as React.CSSProperties}
                         title={config.name}
                       >
@@ -444,7 +446,9 @@ const VPDSmartAnalysis: React.FC<VPDTemporalAnalysisProps> = ({
                         style={{ 
                           '--crop-color': cropConfig.color,
                           '--crop-color-dark': getCropColorDark(cropConfig.color),
-                          borderColor: currentWeek === parseInt(week) ? cropConfig.color : '#e2e8f0'
+                          borderColor: currentWeek === parseInt(week) ? cropConfig.color : '#e2e8f0',
+                          backgroundColor: currentWeek === parseInt(week) ? cropConfig.color : 'white',
+                          color: currentWeek === parseInt(week) ? 'white' : '#374151'
                         } as React.CSSProperties}
                         title={`Semana ${week} - ${weekConf.vpdRange} kPa - ${weekConf.focus}`}
                       >
