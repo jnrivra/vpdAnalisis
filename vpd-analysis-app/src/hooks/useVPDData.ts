@@ -103,35 +103,6 @@ export const useVPDDataByTimeBlock = (block: TimeBlock) => {
   return { data, loading, error };
 };
 
-/**
- * Hook para obtener datos de análisis térmico
- */
-export const useThermalAnalysisData = (islandId: IslandId) => {
-  const [data, setData] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const thermalData = await vpdDataService.getThermalAnalysisData(islandId);
-        setData(thermalData);
-      } catch (err) {
-        setError(err as Error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (islandId) {
-      fetchData();
-    }
-  }, [islandId]);
-
-  return { data, loading, error };
-};
 
 /**
  * Hook para calcular estadísticas

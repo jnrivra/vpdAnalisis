@@ -105,7 +105,7 @@ export type DayPeriod = 'day' | 'night' | 'full' | 'dawn_cold' | 'night_deep' | 
                         'thermal_warmup' | 'thermal_rebound' | 'thermal_stabilization' | 'night_stable';
 
 // Tipo para bloques temporales
-export type TimeBlock = 'dawn_cold' | 'night_deep' | 'morning' | 'day_active' | 'night_plant';
+export type TimeBlock = 'noche_planta' | 'dia_planta';
 
 // Configuración de bloques temporales
 export interface TimeBlockInfo {

@@ -79,11 +79,8 @@ class VPDDataService {
    * Determina el bloque temporal basado en la hora
    */
   private getTimeBlock(hour: number): TimeBlock {
-    if (hour >= 23 || hour <= 2) return 'dawn_cold';
-    if (hour > 2 && hour <= 8) return 'night_deep';
-    if (hour > 8 && hour <= 12) return 'morning';
-    if (hour > 12 && hour < 17) return 'day_active';
-    return 'night_plant';
+    if (hour >= 17 && hour <= 23) return 'noche_planta';
+    return 'dia_planta';
   }
 
   /**
@@ -126,16 +123,10 @@ class VPDDataService {
     return data.data.filter(record => {
       const hour = record.hour;
       switch (block) {
-        case 'dawn_cold':
-          return hour >= 23 || hour <= 2;
-        case 'night_deep':
-          return hour > 2 && hour <= 8;
-        case 'morning':
-          return hour > 8 && hour <= 12;
-        case 'day_active':
-          return hour > 12 && hour < 17;
-        case 'night_plant':
-          return hour >= 17 && hour < 23;
+        case 'noche_planta':
+          return hour >= 17 && hour <= 23;
+        case 'dia_planta':
+          return hour >= 0 && hour < 17;
         default:
           return true;
       }
@@ -205,42 +196,6 @@ class VPDDataService {
     this.lastFetch = 0;
   }
 
-  /**
-   * Obtiene datos para análisis térmico
-   */
-  async getThermalAnalysisData(islandId: IslandId): Promise<any> {
-    const data = await this.getData();
-    
-    // Calcular gradientes térmicos
-    const thermalData = data.data.map((record, index) => {
-      const currentTemp = record.islands[islandId]?.temperature || 0;
-      const previousTemp = index > 0 ? 
-        data.data[index - 1].islands[islandId]?.temperature || currentTemp : 
-        currentTemp;
-      
-      const gradient = index > 0 ? 
-        (currentTemp - previousTemp) / 0.0833 : // 5 min = 0.0833 horas
-        0;
-      
-      return {
-        ...record,
-        gradient,
-        thermalStage: this.getThermalStage(record.hour)
-      };
-    });
-    
-    return thermalData;
-  }
-
-  /**
-   * Determina la etapa térmica basada en la hora
-   */
-  private getThermalStage(hour: number): string {
-    if (hour >= 5 && hour < 10) return 'warming';
-    if (hour >= 10 && hour < 14) return 'stable_day';
-    if (hour >= 14 && hour < 21) return 'cooling';
-    return 'stable_night';
-  }
 }
 
 // Exportamos una instancia única del servicio
@@ -254,5 +209,3 @@ export const getDataByTimeBlock = (block: TimeBlock) =>
   vpdDataService.getDataByTimeBlock(block);
 export const calculateStatistics = (records: VPDRecord[], islandIds: IslandId[]) =>
   vpdDataService.calculateStatistics(records, islandIds);
-export const getThermalAnalysisData = (islandId: IslandId) =>
-  vpdDataService.getThermalAnalysisData(islandId);

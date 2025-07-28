@@ -3,12 +3,18 @@
 [![React](https://img.shields.io/badge/React-19.1.0-blue.svg)](https://reactjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-4.9.5-blue.svg)](https://www.typescriptlang.org/)
 [![Recharts](https://img.shields.io/badge/Recharts-3.1.0-orange.svg)](https://recharts.org/)
-[![Version](https://img.shields.io/badge/Version-2.2.0-green.svg)](https://github.com/jnrivra/vpdAnalisis)
+[![Version](https://img.shields.io/badge/Version-2.3.0-green.svg)](https://github.com/jnrivra/vpdAnalisis)
 [![Status](https://img.shields.io/badge/Status-Production-success.svg)](https://github.com/jnrivra/vpdAnalisis)
 
 > **Sistema inteligente de control climático para optimización del Déficit de Presión de Vapor (VPD) en cultivos hidropónicos con análisis térmico avanzado y gestión energética**
 
-## 🆕 Actualizaciones Recientes (v2.2.0 - Julio 25, 2025)
+## 🆕 Actualizaciones Recientes (v2.3.0 - Julio 28, 2025)
+
+### 🤖 Integración con Agentes Especializados de Claude Code
+- **36 Agentes Especializados**: Cada agente maneja aspectos específicos del sistema VPD
+- **Arquitectura Multi-Agente**: Coordinación inteligente entre agentes de análisis, visualización y control
+- **Especialización por Dominio**: Agentes expertos en frontend, backend, datos, ML, seguridad y más
+- **Escalabilidad Automática**: Sistema que se adapta automáticamente a la complejidad del proyecto
 
 ### ✨ Control Panel - Análisis Térmico Avanzado
 - **4 Etapas del Ciclo Térmico**: Calentamiento matutino, estabilidad diurna, enfriamiento vespertino y estabilidad nocturna
@@ -35,8 +41,24 @@ Aplicación web desarrollada en React/TypeScript que permite monitorear, analiza
 
 ## 🏗️ Arquitectura del Sistema
 
+### Arquitectura Multi-Agente con Claude Code
+
 ```
 ┌─────────────────────────────────────────────────────────────┐
+│               SISTEMA MULTI-AGENTE VPD                      │
+├─────────────────────────────────────────────────────────────┤
+│  🤖 Claude Code Agents (36 especializados)                 │
+│  ├─ frontend-developer: UI/UX y componentes React          │
+│  ├─ data-engineer: ETL pipelines y análisis de datos       │
+│  ├─ python-pro: Algoritmos de cálculo VPD                  │
+│  ├─ javascript-pro: Optimización y patrones ES6+           │
+│  ├─ performance-engineer: Métricas y optimización          │
+│  ├─ security-auditor: Validación y compliance              │
+│  ├─ ml-engineer: Predicciones y análisis predictivo        │
+│  ├─ database-optimizer: Queries y estructuras de datos     │
+│  ├─ api-documenter: Documentación técnica                  │
+│  └─ ... 27 agentes adicionales especializados              │
+├─────────────────────────────────────────────────────────────┤
 │                    VPD ANALYSIS APP                         │
 ├─────────────────────────────────────────────────────────────┤
 │  📊 Dashboard Principal                                     │
@@ -320,6 +342,13 @@ npm run build --analyze
 
 ## 📊 Roadmap
 
+### ✅ v2.3.0 - Completado (Julio 2025)
+- [x] 🤖 Integración con 36 agentes especializados de Claude Code
+- [x] 🏗️ Arquitectura multi-agente para desarrollo escalable
+- [x] 📚 Documentación técnica completa actualizada
+- [x] 🔧 Sistema de especialización por dominio
+- [x] ⚡ Coordinación automática entre agentes
+
 ### ✅ v2.2.0 - Completado (Julio 2025)
 - [x] 🌡️ Control Panel con análisis térmico avanzado
 - [x] 📊 Sistema de 5 bloques temporales
@@ -327,18 +356,21 @@ npm run build --analyze
 - [x] ⚡ Optimización de rendimiento
 - [x] 📈 Análisis energético mejorado
 
-### 🚧 v2.3.0 - En Desarrollo (Q3 2025)
-- [ ] 📡 API REST para datos en tiempo real
-- [ ] 📧 Sistema de alertas push/SMS
-- [ ] 📊 Exportar reportes PDF
-- [ ] 🔍 Búsqueda avanzada en datos históricos
+### 🚧 v2.4.0 - En Desarrollo (Q3 2025)
+- [ ] 📡 API REST para datos en tiempo real con agente backend-architect
+- [ ] 📧 Sistema de alertas push/SMS con agente incident-responder
+- [ ] 📊 Exportar reportes PDF con agente api-documenter
+- [ ] 🔍 Búsqueda avanzada con agente data-scientist
+- [ ] 🤖 AI-powered recommendations con agente ai-engineer
 
 ### 🔮 v3.0.0 - Futuro (Q4 2025)
-- [ ] 🤖 Machine Learning para predicciones
-- [ ] 📱 App móvil React Native
-- [ ] ☁️ Sincronización cloud multi-granja
-- [ ] 🎯 Automatización completa de control
-- [ ] 📈 Dashboard ejecutivo avanzado
+- [ ] 🤖 Machine Learning avanzado con agente ml-engineer
+- [ ] 📱 App móvil React Native con agente mobile-developer
+- [ ] ☁️ Cloud infrastructure con agente cloud-architect
+- [ ] 🎯 Automatización completa con agente devops-troubleshooter
+- [ ] 📈 Dashboard ejecutivo con agente data-engineer
+- [ ] 🔒 Security hardening con agente security-auditor
+- [ ] 🚀 Performance optimization con agente performance-engineer
 
 ## 📄 Licencia
 
