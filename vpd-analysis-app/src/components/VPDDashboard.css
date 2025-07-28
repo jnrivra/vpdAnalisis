@@ -2,12 +2,12 @@
 
 /* CSS Variables for Crop Colors */
 :root {
-  --albahaca-color: #059669;
-  --albahaca-color-dark: #047857;
-  --lechuga-color: #7c3aed;
-  --lechuga-color-dark: #6d28d9;
-  --mixto-color: #dc2626;
-  --mixto-color-dark: #b91c1c;
+  --albahaca-color: #22c55e;
+  --albahaca-color-dark: #16a34a;
+  --lechuga-color: #8b5cf6;
+  --lechuga-color-dark: #7c3aed;
+  --mixto-color: #f97316;
+  --mixto-color-dark: #ea580c;
 }
 
 /* Dashboard Container */

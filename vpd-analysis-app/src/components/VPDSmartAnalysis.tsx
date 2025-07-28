@@ -78,9 +78,9 @@ const VPDSmartAnalysis: React.FC<VPDTemporalAnalysisProps> = ({
   // Función para obtener color más oscuro
   const getCropColorDark = (color: string): string => {
     const colorMap: { [key: string]: string } = {
-      '#059669': '#047857', // albahaca
-      '#7c3aed': '#6d28d9', // lechuga
-      '#dc2626': '#b91c1c'  // mixto
+      '#22c55e': '#16a34a', // albahaca - verde natural más oscuro
+      '#8b5cf6': '#7c3aed', // lechuga - violeta más profundo 
+      '#f97316': '#ea580c'  // mixto - naranja más intenso
     };
     return colorMap[color] || color;
   };
@@ -90,7 +90,7 @@ const VPDSmartAnalysis: React.FC<VPDTemporalAnalysisProps> = ({
     albahaca: {
       name: 'Albahaca',
       icon: '🌿',
-      color: '#059669', // Verde esmeralda profesional
+      color: '#22c55e', // Verde suave y natural
       weeks: {
         0: { vpdRange: 'N/A', optimalMin: 0.5, optimalMax: 1.5, focus: 'Sin cultivo' },
         1: { vpdRange: '1.05-1.15', optimalMin: 1.05, optimalMax: 1.15, focus: 'Germinación albahaca' },
@@ -101,7 +101,7 @@ const VPDSmartAnalysis: React.FC<VPDTemporalAnalysisProps> = ({
     lechuga: {
       name: 'Lechuga',
       icon: '🥬',
-      color: '#7c3aed', // Violeta profesional para mejor diferenciación
+      color: '#8b5cf6', // Violeta suave y elegante
       weeks: {
         0: { vpdRange: 'N/A', optimalMin: 0.5, optimalMax: 1.5, focus: 'Sin cultivo' },
         1: { vpdRange: '0.95-1.05', optimalMin: 0.95, optimalMax: 1.05, focus: 'Germinación lechuga' },
@@ -112,7 +112,7 @@ const VPDSmartAnalysis: React.FC<VPDTemporalAnalysisProps> = ({
     mixto: {
       name: 'Mixto',
       icon: '🌱',
-      color: '#dc2626', // Rojo profesional para máximo contraste
+      color: '#f97316', // Naranja suave en lugar de rojo intenso
       weeks: {
         0: { vpdRange: 'N/A', optimalMin: 0.5, optimalMax: 1.5, focus: 'Sin cultivo' },
         1: { vpdRange: '1.00-1.10', optimalMin: 1.00, optimalMax: 1.10, focus: 'Establecimiento general' },
@@ -1181,8 +1181,8 @@ const VPDSmartAnalysis: React.FC<VPDTemporalAnalysisProps> = ({
   return (
     <div className="vpd-smart-analysis">
       <div className="analysis-header">
-        <h2>🤖 Análisis Inteligente VPD</h2>
-        <p>Sistema inteligente de recomendaciones para optimización del VPD en tiempo real</p>
+        <h2>🤖 AI Optimizer VPD - Recomendaciones Inteligentes</h2>
+        <p>Sistema de IA para análisis predictivo y optimización automática del VPD por cultivo</p>
       </div>
 
       {renderLocalControls()}

@@ -110,7 +110,7 @@ const VPDDashboard: React.FC<VPDDashboardProps> = ({ data }) => {
 
       {/* Header simplificado */}
       <div className="dashboard-header">
-        <h1>🌱 Sistema de Control VPD - Granja Vertical</h1>
+        <h1>🌱 AgroVPD Analytics - Sistema Inteligente de Monitoreo</h1>
         <div className="header-info">
           <span className="date-info">📅 {data.metadata.date}</span>
           <span className="records-info">📊 {data.metadata.totalRecords} registros</span>
