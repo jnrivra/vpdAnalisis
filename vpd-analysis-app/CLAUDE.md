@@ -597,6 +597,108 @@ Ahora: 2 pasos → Ver temp → Comparar VPD mismo gráfico → Decidir
 
 ---
 
+## 🎯 Changelog v2.4.2 - Enhanced UI/UX & Smart Recommendations
+
+### ✨ Nuevas Características v2.4.2
+
+#### 1. Headers de Semana Simplificados
+- **Eliminados subtítulos redundantes**: Ya no aparece "(Establecimiento radicular)" 
+- **Indicadores visuales de color**: Puntos de color (●) en lugar de códigos hex (#EF4444)
+- **Jerarquía visual mejorada**: Información principal más grande, secundaria más pequeña
+- **Layout profesional**: Mejor organización espacial de elementos
+
+#### 2. Recomendaciones Consolidadas
+- **Comparación directa**: Temperatura y humedad lado a lado en la misma card
+- **Opción recomendada destacada**: Estrella (⭐) indica la opción más eficiente
+- **Iconos intuitivos**: 🌡️ Temperatura, 💧 Humedad para identificación rápida
+- **Impacto energético visible**: Consumo en watts para cada opción
+
+#### 3. Estadísticas Mejoradas
+- **Tamaño de fuente optimizado**: 18px para valores principales, 14px para porcentajes
+- **Puntos de color grandes**: 12px para fácil identificación visual
+- **Espaciado mejorado**: Mejor separación entre elementos
+- **Información contextual**: VPD promedio y tiempo en rango óptimo
+
+#### 4. Integración de Análisis Inteligente
+- **Recomendaciones del Smart Analysis**: Copiadas a cada sección de semana
+- **Cálculo de desviaciones**: Muestra diferencia respecto al objetivo
+- **Análisis de ajustes**: Temperatura vs humedad con impacto energético
+- **Debug mejorado**: Console logs más claros para troubleshooting
+
+### 🔧 Cambios Técnicos v2.4.2
+
+#### Componentes Actualizados
+```typescript
+// VPDTemporalAnalysis.tsx
+- calculateVPDAdjustments(): Función copiada del Smart Analysis
+- renderIslandRecommendations(): Rediseñada con layout consolidado
+- renderWeekSections(): Headers simplificados con indicadores visuales
+- CSS classes enhanced: *-enhanced suffix para nuevos estilos
+
+// App.css
+- Nuevas clases CSS para headers limpios
+- Estilos para recomendaciones consolidadas
+- Variables CSS para consistencia visual
+- Grid layouts responsivos
+```
+
+#### Layout de Recomendaciones
+```
+┌─ ● I3 ─────────────────────────────────┐
+│ ⬆️ Alto +0.11 kPa                      │
+├─────────────────────────────────────────┤
+│ 🌡️ Temperatura:        💧 Humedad:     │
+│ 24.4°C (-0.6°C) ⭐     65.2% (+3.1%)   │
+│ ⚡ 99W                 ⚡ 117W          │
+└─────────────────────────────────────────┘
+```
+
+### 💡 Beneficios del Nuevo Diseño
+
+#### 1. Toma de Decisiones Más Rápida
+- **Todo visible de un vistazo**: No hay que cambiar entre pestañas
+- **Comparación directa**: Temperatura vs humedad lado a lado
+- **Información contextual**: Estado actual y objetivo en el mismo lugar
+
+#### 2. Interface Más Limpia
+- **Sin información redundante**: Solo datos esenciales
+- **Colores como lenguaje visual**: No como texto
+- **Jerarquía clara**: Lo importante destaca
+
+#### 3. Mejor Experiencia de Usuario
+- **Menos clics**: Toda la información relevante junta
+- **Más intuitivo**: Iconos y colores comunican estado
+- **Profesional**: Diseño moderno y minimalista
+
+### 🎨 Sistema de Diseño
+
+#### Paleta de Colores (v2.4.1)
+```typescript
+const islandColors = {
+  I1: '#8B7CF6', // Purple
+  I2: '#3B82F6', // Blue  
+  I3: '#EF4444', // Red
+  I4: '#F59E0B', // Orange
+  I5: '#EC4899', // Pink
+  I6: '#10B981'  // Green
+};
+```
+
+#### Tamaños de Fuente
+- **Títulos**: 24px (--font-size-2xl)
+- **Valores principales**: 18px (--font-size-lg)
+- **Texto normal**: 16px (--font-size-base)
+- **Secundario**: 14px (--font-size-sm)
+- **Pequeño**: 12px (--font-size-xs)
+
+#### Espaciado (8px Grid)
+- **--space-2**: 8px (gaps pequeños)
+- **--space-3**: 12px (separación normal)
+- **--space-4**: 16px (secciones)
+- **--space-5**: 20px (padding principal)
+
+---
+
 **Recuerda**: Esta arquitectura está diseñada para escalar. Siempre usa el servicio de datos en lugar de acceder directamente al JSON.
 
-**Nueva filosofía v2.4.0**: "Integrar datos donde se necesitan para decisiones, no donde técnicamente es más fácil mostrarlos".
+**Nueva filosofía v2.4.2**: "Interface limpia y decisiones claras - menos es más cuando cada elemento tiene propósito".

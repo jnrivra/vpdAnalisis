@@ -544,6 +544,31 @@ const VPDTemporalAnalysis: React.FC<VPDTemporalAnalysisProps> = ({
     </div>
   );
 
+  // Función para calcular ajustes necesarios para alcanzar VPD objetivo
+  const calculateVPDAdjustments = (currentTemp: number, currentRH: number, currentVPD: number, targetVPD: number) => {
+    // Calcular ajuste de temperatura necesario (manteniendo humedad)
+    const tempForTargetVPD = currentTemp - (currentVPD - targetVPD) * 5; // Aproximación
+    const tempAdjustment = tempForTargetVPD - currentTemp;
+    
+    // Calcular ajuste de humedad necesario (manteniendo temperatura)
+    const rhForTargetVPD = currentRH * (currentVPD / targetVPD);
+    const rhAdjustment = rhForTargetVPD - currentRH;
+    
+    // Calcular impacto energético estimado
+    const tempEnergyImpact = Math.abs(tempAdjustment) * 180; // W por grado
+    const rhEnergyImpact = Math.abs(rhAdjustment) * 40; // W por %
+    
+    return {
+      tempAdjustment,
+      tempForTargetVPD,
+      rhAdjustment,
+      rhForTargetVPD,
+      tempEnergyImpact,
+      rhEnergyImpact,
+      recommendedAction: tempEnergyImpact < rhEnergyImpact ? 'temperature' : 'humidity'
+    };
+  };
+
   // Función para agrupar islas por semana asignada
   const getIslandsByWeek = (week: number) => {
     const result = Object.entries(islandWeekAssignments)
@@ -644,6 +669,146 @@ const VPDTemporalAnalysis: React.FC<VPDTemporalAnalysisProps> = ({
     });
     
     return result;
+  };
+
+  // Renderizar panel de recomendaciones para una isla
+  const renderIslandRecommendations = (island: string, week: number) => {
+    const stats = statistics?.[island];
+    
+    if (!stats) {
+      return null; // No mostrar nada si no hay estadísticas
+    }
+    
+    // Obtener datos completos de la isla del dataset original
+    let filteredData = data.data;
+
+    // Aplicar los mismos filtros que processedData
+    if (localPeriod === 'day') {
+      filteredData = data.data.filter(record => {
+        const hour = record.hour;
+        return hour >= 6 && hour < 17;
+      });
+    } else if (localPeriod === 'night') {
+      filteredData = data.data.filter(record => {
+        const hour = record.hour;
+        return hour >= 17 && hour < 23;
+      });
+    }
+
+    if (localTimeBlock) {
+      filteredData = filteredData.filter(record => {
+        const hour = record.hour;
+        switch (localTimeBlock) {
+          case 'noche_planta':
+            return hour >= 17 && hour <= 23;
+          case 'dia_planta':
+            return hour >= 0 && hour < 17;
+          default:
+            return true;
+        }
+      });
+    }
+
+    // Obtener datos de la isla del dataset filtrado
+    const islandRecords = filteredData.filter(record => {
+      const islandData = record.islands[island as keyof typeof record.islands];
+      return islandData && islandData.temperature !== undefined && 
+             islandData.humidity !== undefined && islandData.vpd !== undefined;
+    });
+    
+    if (islandRecords.length === 0) {
+      return null; // No mostrar si no hay datos
+    }
+    
+    // Obtener el último registro con datos válidos
+    const lastRecord = islandRecords[islandRecords.length - 1];
+    const islandData = lastRecord.islands[island as keyof typeof lastRecord.islands];
+    
+    if (!islandData) {
+      return null;
+    }
+    
+    const currentTemp = islandData.temperature;
+    const currentRH = islandData.humidity;
+    const currentVPD = islandData.vpd;
+    
+    if (!currentTemp || !currentRH || !currentVPD) {
+      return null;
+    }
+    
+    // Obtener configuración de la semana para esta isla
+    const cropType = islandCropTypes[island as keyof typeof islandCropTypes];
+    const weekAssignment = islandWeekAssignments[island as keyof typeof islandWeekAssignments];
+    const cropConfig = cropTypeConfigs[cropType];
+    const weekConfig = cropConfig.weeks[weekAssignment as keyof typeof cropConfig.weeks];
+    
+    const targetVPD = (weekConfig.optimalMin + weekConfig.optimalMax) / 2;
+    const deviation = currentVPD - targetVPD;
+    
+    // Debug para verificar cálculos
+    console.log(`${island} Debug: currentVPD=${currentVPD}, targetVPD=${targetVPD}, deviation=${deviation.toFixed(3)}, cropType=${cropType}, weekAssignment=${weekAssignment}, optimalRange=${weekConfig.optimalMin}-${weekConfig.optimalMax}`);
+    
+    // Determinar estado del VPD
+    const vpdStatus = currentVPD >= weekConfig.optimalMin && currentVPD <= weekConfig.optimalMax ? 
+      'optimal' : currentVPD < weekConfig.optimalMin ? 'low' : 'high';
+    
+    const adjustments = vpdStatus !== 'optimal' ? 
+      calculateVPDAdjustments(currentTemp, currentRH, currentVPD, targetVPD) : null;
+    
+    return (
+      <div key={island} className="island-recommendations-enhanced">
+        <div className="recommendation-header-enhanced">
+          <div className="island-info">
+            <span 
+              className="color-dot-large"
+              style={{ backgroundColor: islandColors[island as keyof typeof islandColors] }}
+            ></span>
+            <h5 className="island-name-enhanced">{island}</h5>
+          </div>
+          <div className="status-info-enhanced">
+            <span className={`status-badge-enhanced ${vpdStatus}`}>
+              {vpdStatus === 'optimal' ? '✅ Óptimo' : 
+               vpdStatus === 'low' ? '⬇️ Bajo' : '⬆️ Alto'}
+            </span>
+            <span className="deviation-value-enhanced">
+              {deviation > 0 ? '+' : ''}{deviation.toFixed(2)} kPa
+            </span>
+          </div>
+        </div>
+        
+        {vpdStatus !== 'optimal' && adjustments && (
+          <div className="adjustment-options-enhanced">
+            <div className={`adjustment-option-enhanced ${adjustments.recommendedAction === 'temperature' ? 'recommended' : ''}`}>
+              <div className="option-header-enhanced">
+                <span className="option-icon">🌡️</span>
+                <span className="option-type">Temperatura:</span>
+                {adjustments.recommendedAction === 'temperature' && <span className="recommended-badge">⭐</span>}
+              </div>
+              <div className="option-details-enhanced">
+                <span className="target-value">
+                  {adjustments.tempForTargetVPD.toFixed(1)}°C ({adjustments.tempAdjustment > 0 ? '+' : ''}{adjustments.tempAdjustment.toFixed(1)}°C)
+                </span>
+                <span className="energy-cost">⚡ {adjustments.tempEnergyImpact.toFixed(0)}W</span>
+              </div>
+            </div>
+            
+            <div className={`adjustment-option-enhanced ${adjustments.recommendedAction === 'humidity' ? 'recommended' : ''}`}>
+              <div className="option-header-enhanced">
+                <span className="option-icon">💧</span>
+                <span className="option-type">Humedad:</span>
+                {adjustments.recommendedAction === 'humidity' && <span className="recommended-badge">⭐</span>}
+              </div>
+              <div className="option-details-enhanced">
+                <span className="target-value">
+                  {adjustments.rhForTargetVPD.toFixed(1)}% ({adjustments.rhAdjustment > 0 ? '+' : ''}{adjustments.rhAdjustment.toFixed(1)}%)
+                </span>
+                <span className="energy-cost">⚡ {adjustments.rhEnergyImpact.toFixed(0)}W</span>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    );
   };
 
   // Renderizar gráfico individual para una métrica específica
@@ -865,45 +1030,61 @@ const VPDTemporalAnalysis: React.FC<VPDTemporalAnalysisProps> = ({
           
           return (
             <div key={week} className="week-section">
-              <div className="week-header">
-                <h3>
-                  {weekConfig.icon} {weekConfig.name}
-                  <span className="week-subtitle">({weekConfig.focus})</span>
-                </h3>
-                <div className="week-info">
-                  <span className="islands-count">
-                    Islas activas: {islandsInWeek.map(island => 
-                      `${island} (${islandColors[island as keyof typeof islandColors]})`
-                    ).join(', ') || 'Ninguna'}
-                  </span>
-                  <span className="vpd-range">
-                    VPD objetivo: {getWeekConfig(week).vpdRange} kPa
-                  </span>
-                  
-                  {/* Estadísticas integradas en el header */}
-                  {islandsInWeek.length > 0 && (
-                    <div className="week-stats-inline">
-                      {islandsInWeek.map(island => {
-                        const stats = statistics?.[island];
-                        if (!stats) return null;
-
-                        return (
+              <div className="week-header-clean">
+                <div className="week-title-section">
+                  <h3 className="week-title-clean">
+                    {weekConfig.icon} {weekConfig.name}
+                  </h3>
+                  <div className="week-meta">
+                    <span className="islands-list">
+                      Islas activas: {islandsInWeek.map(island => (
+                        <span key={island} className="island-indicator">
                           <span 
-                            key={island} 
-                            className="island-stat-inline"
-                            style={{ 
-                              borderLeft: `3px solid ${islandColors[island as keyof typeof islandColors]}`,
-                              paddingLeft: '8px'
-                            }}
-                          >
-                            {getIslandIcon(island)} {island}: {stats.avg} kPa ({stats.optimalPercentage}%)
-                          </span>
-                        );
-                      })}
-                    </div>
-                  )}
+                            className="color-dot"
+                            style={{ backgroundColor: islandColors[island as keyof typeof islandColors] }}
+                          ></span>
+                          {island}
+                        </span>
+                      )).reduce((prev, curr, index) => index === 0 ? [curr] : [...prev, ', ', curr], [] as React.ReactNode[])}
+                    </span>
+                    <span className="vpd-target">
+                      VPD objetivo: <strong>{getWeekConfig(week).vpdRange} kPa</strong>
+                    </span>
+                  </div>
                 </div>
+                
+                {/* Estadísticas más grandes y legibles */}
+                {islandsInWeek.length > 0 && (
+                  <div className="week-stats-enhanced">
+                    {islandsInWeek.map(island => {
+                      const stats = statistics?.[island];
+                      if (!stats) return null;
+
+                      return (
+                        <div key={island} className="island-stat-enhanced">
+                          <span 
+                            className="color-dot-large"
+                            style={{ backgroundColor: islandColors[island as keyof typeof islandColors] }}
+                          ></span>
+                          <span className="island-name-large">{island}:</span>
+                          <span className="stat-value-large">{stats.avg} kPa</span>
+                          <span className="stat-percentage">({stats.optimalPercentage}%)</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
+              
+              {/* Panel de recomendaciones inteligentes */}
+              {islandsInWeek.length > 0 && (
+                <div className="recommendations-panel-temporal">
+                  <h4 className="recommendations-title">🎯 Recomendaciones de Ajuste</h4>
+                  <div className="recommendations-grid-temporal">
+                    {islandsInWeek.map(island => renderIslandRecommendations(island, week))}
+                  </div>
+                </div>
+              )}
               
               <div className="week-charts">
                 {renderMetricChart(week, 'temperature', 'Temperatura', '°C')}
