@@ -70,55 +70,56 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
             <div className="control-section">
               <h4>📊 Rangos VPD</h4>
               <div className="control-group">
-                <label>VPD Óptimo Mínimo</label>
+                <label>VPD Óptimo Mínimo (kPa)</label>
                 <input
-                  type="range"
+                  type="number"
                   min="0.5"
                   max="2.0"
                   step="0.05"
                   value={weekConfig.optimalMin}
-                  onChange={(e) => handleRangeChange('optimalMin', parseFloat(e.target.value))}
+                  onChange={(e) => handleRangeChange('optimalMin', parseFloat(e.target.value) || 0)}
+                  className="value-input"
                 />
-                <span className="value-display">{weekConfig.optimalMin.toFixed(2)} kPa</span>
+
               </div>
 
               <div className="control-group">
-                <label>VPD Óptimo Máximo</label>
+                <label>VPD Óptimo Máximo (kPa)</label>
                 <input
-                  type="range"
+                  type="number"
                   min="0.5"
                   max="2.0"
                   step="0.05"
                   value={weekConfig.optimalMax}
-                  onChange={(e) => handleRangeChange('optimalMax', parseFloat(e.target.value))}
+                  onChange={(e) => handleRangeChange('optimalMax', parseFloat(e.target.value) || 0)}
+                  className="value-input"
                 />
-                <span className="value-display">{weekConfig.optimalMax.toFixed(2)} kPa</span>
               </div>
 
               <div className="control-group">
-                <label>VPD Aceptable Mínimo</label>
+                <label>VPD Aceptable Mínimo (kPa)</label>
                 <input
-                  type="range"
+                  type="number"
                   min="0.3"
                   max="2.0"
                   step="0.05"
                   value={weekConfig.acceptableMin}
-                  onChange={(e) => handleRangeChange('acceptableMin', parseFloat(e.target.value))}
+                  onChange={(e) => handleRangeChange('acceptableMin', parseFloat(e.target.value) || 0)}
+                  className="value-input"
                 />
-                <span className="value-display">{weekConfig.acceptableMin.toFixed(2)} kPa</span>
               </div>
 
               <div className="control-group">
-                <label>VPD Aceptable Máximo</label>
+                <label>VPD Aceptable Máximo (kPa)</label>
                 <input
-                  type="range"
+                  type="number"
                   min="0.5"
                   max="3.0"
                   step="0.05"
                   value={weekConfig.acceptableMax}
-                  onChange={(e) => handleRangeChange('acceptableMax', parseFloat(e.target.value))}
+                  onChange={(e) => handleRangeChange('acceptableMax', parseFloat(e.target.value) || 0)}
+                  className="value-input"
                 />
-                <span className="value-display">{weekConfig.acceptableMax.toFixed(2)} kPa</span>
               </div>
             </div>
 
@@ -126,29 +127,29 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
             <div className="control-section">
               <h4>🌡️ Temperatura Día</h4>
               <div className="control-group">
-                <label>Temperatura Mínima</label>
+                <label>Temperatura Mínima (°C)</label>
                 <input
-                  type="range"
+                  type="number"
                   min="15"
                   max="30"
                   step="1"
                   value={dayTemp.min}
-                  onChange={(e) => updateTemperatureRange('day', 'min', parseInt(e.target.value))}
+                  onChange={(e) => updateTemperatureRange('day', 'min', parseInt(e.target.value) || 15)}
+                  className="value-input"
                 />
-                <span className="value-display">{dayTemp.min}°C</span>
               </div>
 
               <div className="control-group">
-                <label>Temperatura Máxima</label>
+                <label>Temperatura Máxima (°C)</label>
                 <input
-                  type="range"
+                  type="number"
                   min="15"
                   max="35"
                   step="1"
                   value={dayTemp.max}
-                  onChange={(e) => updateTemperatureRange('day', 'max', parseInt(e.target.value))}
+                  onChange={(e) => updateTemperatureRange('day', 'max', parseInt(e.target.value) || 15)}
+                  className="value-input"
                 />
-                <span className="value-display">{dayTemp.max}°C</span>
               </div>
             </div>
 
@@ -156,29 +157,29 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
             <div className="control-section">
               <h4>💧 Humedad Día</h4>
               <div className="control-group">
-                <label>Humedad Mínima</label>
+                <label>Humedad Mínima (%)</label>
                 <input
-                  type="range"
+                  type="number"
                   min="40"
                   max="90"
                   step="5"
                   value={dayRH.min}
-                  onChange={(e) => updateHumidityRange('day', 'min', parseInt(e.target.value))}
+                  onChange={(e) => updateHumidityRange('day', 'min', parseInt(e.target.value) || 40)}
+                  className="value-input"
                 />
-                <span className="value-display">{dayRH.min}%</span>
               </div>
 
               <div className="control-group">
-                <label>Humedad Máxima</label>
+                <label>Humedad Máxima (%)</label>
                 <input
-                  type="range"
+                  type="number"
                   min="50"
                   max="95"
                   step="5"
                   value={dayRH.max}
-                  onChange={(e) => updateHumidityRange('day', 'max', parseInt(e.target.value))}
+                  onChange={(e) => updateHumidityRange('day', 'max', parseInt(e.target.value) || 50)}
+                  className="value-input"
                 />
-                <span className="value-display">{dayRH.max}%</span>
               </div>
             </div>
 
@@ -186,29 +187,29 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
             <div className="control-section">
               <h4>🌙 Temperatura Noche</h4>
               <div className="control-group">
-                <label>Temperatura Mínima</label>
+                <label>Temperatura Mínima (°C)</label>
                 <input
-                  type="range"
+                  type="number"
                   min="15"
                   max="30"
                   step="1"
                   value={nightTemp.min}
-                  onChange={(e) => updateTemperatureRange('night', 'min', parseInt(e.target.value))}
+                  onChange={(e) => updateTemperatureRange('night', 'min', parseInt(e.target.value) || 15)}
+                  className="value-input"
                 />
-                <span className="value-display">{nightTemp.min}°C</span>
               </div>
 
               <div className="control-group">
-                <label>Temperatura Máxima</label>
+                <label>Temperatura Máxima (°C)</label>
                 <input
-                  type="range"
+                  type="number"
                   min="15"
                   max="30"
                   step="1"
                   value={nightTemp.max}
-                  onChange={(e) => updateTemperatureRange('night', 'max', parseInt(e.target.value))}
+                  onChange={(e) => updateTemperatureRange('night', 'max', parseInt(e.target.value) || 15)}
+                  className="value-input"
                 />
-                <span className="value-display">{nightTemp.max}°C</span>
               </div>
             </div>
 
@@ -216,29 +217,29 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
             <div className="control-section">
               <h4>🌃 Humedad Noche</h4>
               <div className="control-group">
-                <label>Humedad Mínima</label>
+                <label>Humedad Mínima (%)</label>
                 <input
-                  type="range"
+                  type="number"
                   min="40"
                   max="90"
                   step="5"
                   value={nightRH.min}
-                  onChange={(e) => updateHumidityRange('night', 'min', parseInt(e.target.value))}
+                  onChange={(e) => updateHumidityRange('night', 'min', parseInt(e.target.value) || 40)}
+                  className="value-input"
                 />
-                <span className="value-display">{nightRH.min}%</span>
               </div>
 
               <div className="control-group">
-                <label>Humedad Máxima</label>
+                <label>Humedad Máxima (%)</label>
                 <input
-                  type="range"
+                  type="number"
                   min="50"
                   max="95"
                   step="5"
                   value={nightRH.max}
-                  onChange={(e) => updateHumidityRange('night', 'max', parseInt(e.target.value))}
+                  onChange={(e) => updateHumidityRange('night', 'max', parseInt(e.target.value) || 50)}
+                  className="value-input"
                 />
-                <span className="value-display">{nightRH.max}%</span>
               </div>
             </div>
 

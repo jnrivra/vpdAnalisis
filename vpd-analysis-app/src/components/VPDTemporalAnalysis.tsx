@@ -78,9 +78,9 @@ const VPDTemporalAnalysis: React.FC<VPDTemporalAnalysisProps> = ({
   // Función para obtener color más oscuro
   const getCropColorDark = (color: string): string => {
     const colorMap: { [key: string]: string } = {
-      '#22c55e': '#16a34a', // albahaca - verde natural más oscuro
-      '#8b5cf6': '#7c3aed', // lechuga - violeta más profundo 
-      '#f97316': '#ea580c'  // mixto - naranja más intenso
+      '#6EE7B7': '#10B981', // albahaca - verde natural más oscuro
+      '#8B7CF6': '#7C3AED', // lechuga - violeta más profundo 
+      '#FB923C': '#EA580C'  // mixto - naranja más intenso
     };
     return colorMap[color] || color;
   };
@@ -90,7 +90,7 @@ const VPDTemporalAnalysis: React.FC<VPDTemporalAnalysisProps> = ({
     albahaca: {
       name: 'Albahaca',
       icon: '🌿',
-      color: '#22c55e', // Verde suave y natural
+      color: '#6EE7B7', // Verde suave y natural
       weeks: {
         0: { vpdRange: 'N/A', optimalMin: 0.5, optimalMax: 1.5, focus: 'Sin cultivo' },
         1: { vpdRange: '1.05-1.15', optimalMin: 1.05, optimalMax: 1.15, focus: 'Germinación albahaca' },
@@ -101,7 +101,7 @@ const VPDTemporalAnalysis: React.FC<VPDTemporalAnalysisProps> = ({
     lechuga: {
       name: 'Lechuga',
       icon: '🥬',
-      color: '#8b5cf6', // Violeta suave y elegante
+      color: '#8B7CF6', // Violeta suave y elegante
       weeks: {
         0: { vpdRange: 'N/A', optimalMin: 0.5, optimalMax: 1.5, focus: 'Sin cultivo' },
         1: { vpdRange: '0.95-1.05', optimalMin: 0.95, optimalMax: 1.05, focus: 'Germinación lechuga' },
@@ -112,7 +112,7 @@ const VPDTemporalAnalysis: React.FC<VPDTemporalAnalysisProps> = ({
     mixto: {
       name: 'Mixto',
       icon: '🌱',
-      color: '#f97316', // Naranja suave en lugar de rojo intenso
+      color: '#FB923C', // Naranja suave en lugar de rojo intenso
       weeks: {
         0: { vpdRange: 'N/A', optimalMin: 0.5, optimalMax: 1.5, focus: 'Sin cultivo' },
         1: { vpdRange: '1.00-1.10', optimalMin: 1.00, optimalMax: 1.10, focus: 'Establecimiento general' },
@@ -137,7 +137,7 @@ const VPDTemporalAnalysis: React.FC<VPDTemporalAnalysisProps> = ({
       nightTemp: 'Variable',
       nightRH: 'Variable',
       nightVPD: 'N/A',
-      color: '#95a5a6'
+      color: '#94A3B8'
     },
     1: {
       name: 'Semana 1',
@@ -153,7 +153,7 @@ const VPDTemporalAnalysis: React.FC<VPDTemporalAnalysisProps> = ({
       nightTemp: '22-23°C',
       nightRH: '60-65%',
       nightVPD: '0.90-1.10',
-      color: '#27ae60'
+      color: '#10B981'
     },
     2: {
       name: 'Semana 2',
@@ -169,7 +169,7 @@ const VPDTemporalAnalysis: React.FC<VPDTemporalAnalysisProps> = ({
       nightTemp: '21-22°C',
       nightRH: '62-66%',
       nightVPD: '0.85-1.05',
-      color: '#f39c12'
+      color: '#F59E0B'
     },
     3: {
       name: 'Semana 3',
@@ -185,7 +185,7 @@ const VPDTemporalAnalysis: React.FC<VPDTemporalAnalysisProps> = ({
       nightTemp: '20-21°C',
       nightRH: '64-68%',
       nightVPD: '0.80-1.00',
-      color: '#3498db'
+      color: '#3B82F6'
     }
   };
 
@@ -221,14 +221,14 @@ const VPDTemporalAnalysis: React.FC<VPDTemporalAnalysisProps> = ({
     };
   }, [selectedIslands, islandCropTypes, islandWeekAssignments, cropTypeConfigs, weekConfigs]);
 
-  // Colores para cada isla
+  // Colores únicos para cada isla - Más contrastantes
   const islandColors = {
-    I1: '#27ae60',
-    I2: '#3498db',
-    I3: '#e74c3c',
-    I4: '#f39c12',
-    I5: '#9b59b6',
-    I6: '#1abc9c'
+    I1: '#8B7CF6', // Purple
+    I2: '#3B82F6', // Blue  
+    I3: '#EF4444', // Red (cambiado de verde)
+    I4: '#F59E0B', // Orange
+    I5: '#EC4899', // Pink
+    I6: '#10B981'  // Green (cambiado de teal)
   };
 
   // Función para obtener ícono de isla
@@ -394,9 +394,9 @@ const VPDTemporalAnalysis: React.FC<VPDTemporalAnalysisProps> = ({
                         style={{ 
                           '--crop-color': config.color,
                           '--crop-color-dark': getCropColorDark(config.color),
-                          borderColor: currentCropType === cropType ? config.color : '#e2e8f0',
+                          borderColor: currentCropType === cropType ? config.color : '#E2E8F0',
                           backgroundColor: currentCropType === cropType ? config.color : 'white',
-                          color: currentCropType === cropType ? 'white' : '#374151'
+                          color: currentCropType === cropType ? 'white' : '#334155'
                         } as React.CSSProperties}
                         title={config.name}
                       >
@@ -421,7 +421,7 @@ const VPDTemporalAnalysis: React.FC<VPDTemporalAnalysisProps> = ({
                         style={{ 
                           '--crop-color': cropConfig.color,
                           '--crop-color-dark': getCropColorDark(cropConfig.color),
-                          borderColor: currentWeek === parseInt(week) ? cropConfig.color : '#e2e8f0',
+                          borderColor: currentWeek === parseInt(week) ? cropConfig.color : '#E2E8F0',
                           backgroundColor: currentWeek === parseInt(week) ? cropConfig.color : 'white',
                           color: currentWeek === parseInt(week) ? 'white' : '#374151'
                         } as React.CSSProperties}
@@ -546,10 +546,15 @@ const VPDTemporalAnalysis: React.FC<VPDTemporalAnalysisProps> = ({
 
   // Función para agrupar islas por semana asignada
   const getIslandsByWeek = (week: number) => {
-    return Object.entries(islandWeekAssignments)
+    const result = Object.entries(islandWeekAssignments)
       .filter(([_, assignedWeek]) => assignedWeek === week)
       .map(([island]) => island)
       .filter(island => selectedIslands[island as keyof IslandSelection]);
+    
+    console.log(`Semana ${week} - Islas asignadas:`, result);
+    console.log(`Semana ${week} - Colores:`, result.map(island => `${island}: ${islandColors[island as keyof typeof islandColors]}`));
+    
+    return result;
   };
 
   // Función para obtener configuración promedio de una semana específica
@@ -721,7 +726,7 @@ const VPDTemporalAnalysis: React.FC<VPDTemporalAnalysisProps> = ({
         <h4>{title}</h4>
         <ResponsiveContainer width="100%" height={350}>
           <ComposedChart data={weekData}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+            <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" />
             <XAxis 
               dataKey="time" 
               tick={{ fontSize: 10 }}
@@ -756,7 +761,7 @@ const VPDTemporalAnalysis: React.FC<VPDTemporalAnalysisProps> = ({
                 <ReferenceLine 
                   yAxisId={yAxisId}
                   y={weekConfig.optimalMin} 
-                  stroke="#e67e22" 
+                  stroke="#FB923C" 
                   strokeDasharray="5 5" 
                   strokeWidth={2}
                   label={`VPD Min: ${weekConfig.optimalMin}`}
@@ -764,7 +769,7 @@ const VPDTemporalAnalysis: React.FC<VPDTemporalAnalysisProps> = ({
                 <ReferenceLine 
                   yAxisId={yAxisId}
                   y={weekConfig.optimalMax} 
-                  stroke="#e67e22" 
+                  stroke="#FB923C" 
                   strokeDasharray="5 5" 
                   strokeWidth={2}
                   label={`VPD Max: ${weekConfig.optimalMax}`}
@@ -779,18 +784,18 @@ const VPDTemporalAnalysis: React.FC<VPDTemporalAnalysisProps> = ({
                   orientation="right"
                   label={{ value: 'VPD (kPa)', angle: 90, position: 'insideRight' }}
                   domain={[0.5, 1.3]}
-                  tick={{ fontSize: 10, fill: '#e67e22' }}
+                  tick={{ fontSize: 10, fill: '#FB923C' }}
                   type="number"
                   scale="linear"
                   tickFormatter={(value) => value.toFixed(1)}
-                  axisLine={{ stroke: '#e67e22' }}
-                  tickLine={{ stroke: '#e67e22' }}
+                  axisLine={{ stroke: '#FB923C' }}
+                  tickLine={{ stroke: '#FB923C' }}
                 />
                 {/* Líneas VPD óptimas */}
                 <ReferenceLine 
                   yAxisId="vpdSecondary"
                   y={weekConfig.optimalMin} 
-                  stroke="#e67e22" 
+                  stroke="#FB923C" 
                   strokeDasharray="5 5" 
                   strokeWidth={2}
                   label={`VPD Min: ${weekConfig.optimalMin}`}
@@ -798,7 +803,7 @@ const VPDTemporalAnalysis: React.FC<VPDTemporalAnalysisProps> = ({
                 <ReferenceLine 
                   yAxisId="vpdSecondary"
                   y={weekConfig.optimalMax} 
-                  stroke="#e67e22" 
+                  stroke="#FB923C" 
                   strokeDasharray="5 5" 
                   strokeWidth={2}
                   label={`VPD Max: ${weekConfig.optimalMax}`}
@@ -814,13 +819,20 @@ const VPDTemporalAnalysis: React.FC<VPDTemporalAnalysisProps> = ({
                 type="monotone"
                 dataKey={`${island}_${metric}`}
                 stroke={islandColors[island as keyof typeof islandColors]}
-                strokeWidth={2}
+                strokeWidth={metric === 'vpd' ? 3 : 2.5}
                 dot={false}
                 name={`${island} ${title}`}
+                connectNulls={false}
+                activeDot={{ 
+                  r: 4, 
+                  fill: islandColors[island as keyof typeof islandColors],
+                  stroke: '#ffffff',
+                  strokeWidth: 2
+                }}
               />
             ))}
 
-            {/* En gráficos de temperatura/humedad: agregar líneas VPD de cada isla */}
+            {/* En gráficos de temperatura/humedad: agregar líneas VPD de cada isla con estilo sutil */}
             {metric !== 'vpd' && islandsInWeek.map(island => (
               <Line
                 key={`${island}_vpd_overlay`}
@@ -829,10 +841,10 @@ const VPDTemporalAnalysis: React.FC<VPDTemporalAnalysisProps> = ({
                 dataKey={`${island}_vpd`}
                 stroke={islandColors[island as keyof typeof islandColors]}
                 strokeWidth={1}
-                strokeDasharray="2 2"
                 dot={false}
                 name={`${island} VPD`}
-                opacity={0.7}
+                opacity={0.3}
+                connectNulls={false}
               />
             ))}
           </ComposedChart>
@@ -860,7 +872,9 @@ const VPDTemporalAnalysis: React.FC<VPDTemporalAnalysisProps> = ({
                 </h3>
                 <div className="week-info">
                   <span className="islands-count">
-                    Islas activas: {islandsInWeek.join(', ') || 'Ninguna'}
+                    Islas activas: {islandsInWeek.map(island => 
+                      `${island} (${islandColors[island as keyof typeof islandColors]})`
+                    ).join(', ') || 'Ninguna'}
                   </span>
                   <span className="vpd-range">
                     VPD objetivo: {getWeekConfig(week).vpdRange} kPa
@@ -874,8 +888,15 @@ const VPDTemporalAnalysis: React.FC<VPDTemporalAnalysisProps> = ({
                         if (!stats) return null;
 
                         return (
-                          <span key={island} className="island-stat-inline">
-                            {getIslandIcon(island)} {island}: {stats.avg} kPa ({stats.optimalPercentage})
+                          <span 
+                            key={island} 
+                            className="island-stat-inline"
+                            style={{ 
+                              borderLeft: `3px solid ${islandColors[island as keyof typeof islandColors]}`,
+                              paddingLeft: '8px'
+                            }}
+                          >
+                            {getIslandIcon(island)} {island}: {stats.avg} kPa ({stats.optimalPercentage}%)
                           </span>
                         );
                       })}
@@ -899,7 +920,6 @@ const VPDTemporalAnalysis: React.FC<VPDTemporalAnalysisProps> = ({
     <div className="vpd-temporal-analysis">
       <div className="analysis-header">
         <h2>📈 Monitor Temporal VPD - Evolución Multi-Isla</h2>
-        <p>Evolución del VPD a lo largo del tiempo con control completo de parámetros</p>
       </div>
 
       {renderLocalControls()}
@@ -913,7 +933,7 @@ const VPDTemporalAnalysis: React.FC<VPDTemporalAnalysisProps> = ({
         <div className="chart-container">
           <ResponsiveContainer width="100%" height={400}>
             <ComposedChart data={processedData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+              <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" />
               <XAxis 
                 dataKey="time" 
                 tick={{ fontSize: 12 }}
@@ -952,15 +972,17 @@ const VPDTemporalAnalysis: React.FC<VPDTemporalAnalysisProps> = ({
               <ReferenceLine 
                 yAxisId="left"
                 y={currentWeekConfig.optimalMin} 
-                stroke="#27ae60" 
+                stroke="#FB923C" 
                 strokeDasharray="5 5" 
+                strokeWidth={2}
                 label="Min Óptimo"
               />
               <ReferenceLine 
                 yAxisId="left"
                 y={currentWeekConfig.optimalMax} 
-                stroke="#27ae60" 
+                stroke="#FB923C" 
                 strokeDasharray="5 5" 
+                strokeWidth={2}
                 label="Max Óptimo"
               />
 
@@ -970,8 +992,8 @@ const VPDTemporalAnalysis: React.FC<VPDTemporalAnalysisProps> = ({
                 y1={currentWeekConfig.optimalMin}
                 y2={currentWeekConfig.optimalMax}
                 stroke="none"
-                fill="#27ae60"
-                fillOpacity={0.1}
+                fill="#FB923C"
+                fillOpacity={0.08}
               />
 
               {/* Barras de consumo energético */}
@@ -979,7 +1001,7 @@ const VPDTemporalAnalysis: React.FC<VPDTemporalAnalysisProps> = ({
                 <Bar
                   yAxisId="right"
                   dataKey="totalConsumption"
-                  fill="#95a5a6"
+                  fill="#94A3B8"
                   fillOpacity={0.3}
                   name="Consumo Total"
                 />
@@ -995,9 +1017,16 @@ const VPDTemporalAnalysis: React.FC<VPDTemporalAnalysisProps> = ({
                     type="monotone"
                     dataKey={`${island}_VPD`}
                     stroke={islandColors[island as keyof typeof islandColors]}
-                    strokeWidth={2}
+                    strokeWidth={2.5}
                     dot={false}
                     name={`${island} VPD`}
+                    connectNulls={false}
+                    activeDot={{ 
+                      r: 4, 
+                      fill: islandColors[island as keyof typeof islandColors],
+                      stroke: '#ffffff',
+                      strokeWidth: 2
+                    }}
                   />
                 );
               })}

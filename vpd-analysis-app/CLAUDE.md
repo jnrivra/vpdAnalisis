@@ -396,6 +396,77 @@ const processedData = useMemo(() => {
 
 ---
 
+## 🎯 Changelog v2.4.1 - Enhanced Color Consistency & VPD Visualization
+
+### ✨ Nuevas Características v2.4.1
+
+#### 1. Sistema de Colores Únicos por Isla
+- **Colores distintivos**: Cada isla tiene un color único y contrastante
+- **Consistencia global**: Mismo color en todos los componentes y gráficos
+- **Alta legibilidad**: Combinaciones optimizadas para distinción visual
+
+#### 2. Líneas VPD Optimizadas
+- **Estilo sutil**: Líneas continuas, finas (1px) y translúcidas (30% opacity)
+- **Información contextual**: VPD visible sin competir con datos principales
+- **Integración armoniosa**: Eje secundario con colores coordinados
+
+#### 3. Paleta de Colores Actualizada
+```typescript
+const islandColors = {
+  I1: '#8B7CF6', // Purple - Semana 3
+  I2: '#3B82F6', // Blue - Semana 2  
+  I3: '#EF4444', // Red - Semana 1 (cambiado de verde)
+  I4: '#F59E0B', // Orange - Semana 3
+  I5: '#EC4899', // Pink - Vacía
+  I6: '#10B981'  // Green - Semana 1 (cambiado de teal)
+};
+```
+
+#### 4. Mejoras Visuales en Headers
+- **Debug información**: Códigos de color visibles en desarrollo
+- **Indicadores visuales**: Bordes coloreados en estadísticas por isla
+- **Mapeo claro**: Asignación semana-isla-color visible
+
+### 🔧 Cambios Técnicos v2.4.1
+
+#### Componentes Actualizados
+```typescript
+// VPDTemporalAnalysis.tsx & VPDEvolutionChart.tsx
+- Paleta de colores actualizada con máximo contraste
+- Líneas VPD: strokeWidth={1}, opacity={0.3}, sin strokeDasharray
+- Headers con debug info y bordes coloreados
+- Console.log para debugging de asignaciones
+
+// Estilos VPD mejorados
+<Line
+  stroke={islandColors[island]}
+  strokeWidth={1}           // Más fino
+  opacity={0.3}            // Más sutil
+  name={`${island} VPD`}   // Sin interlineado
+/>
+```
+
+### 💡 Beneficios del Nuevo Sistema
+
+#### 1. Legibilidad Mejorada
+- **Contraste máximo**: Rojo vs Verde en Semana 1
+- **Diferenciación clara**: Cada línea inmediatamente reconocible
+- **Jerarquía visual**: Datos principales destacados, VPD contextual
+
+#### 2. Consistencia de Marca
+- **Un color por isla**: I3 siempre rojo, I6 siempre verde
+- **Coherencia global**: Mismo sistema en todas las vistas
+- **Fácil memorización**: Colores predecibles y lógicos
+
+#### 3. Debugging Mejorado
+```javascript
+// Console output durante desarrollo
+Semana 1 - Islas asignadas: ['I3', 'I6']
+Semana 1 - Colores: ['I3: #EF4444', 'I6: #10B981']
+```
+
+---
+
 ## 🎯 Changelog v2.4.0 - Integrated VPD Visualization System
 
 ### ✨ Nuevas Características

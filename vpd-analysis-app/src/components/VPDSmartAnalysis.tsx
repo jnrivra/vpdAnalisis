@@ -78,9 +78,9 @@ const VPDSmartAnalysis: React.FC<VPDTemporalAnalysisProps> = ({
   // Función para obtener color más oscuro
   const getCropColorDark = (color: string): string => {
     const colorMap: { [key: string]: string } = {
-      '#22c55e': '#16a34a', // albahaca - verde natural más oscuro
-      '#8b5cf6': '#7c3aed', // lechuga - violeta más profundo 
-      '#f97316': '#ea580c'  // mixto - naranja más intenso
+      '#6EE7B7': '#10B981', // albahaca - verde natural más oscuro
+      '#8B7CF6': '#7C3AED', // lechuga - violeta más profundo 
+      '#FB923C': '#EA580C'  // mixto - naranja más intenso
     };
     return colorMap[color] || color;
   };
@@ -90,7 +90,7 @@ const VPDSmartAnalysis: React.FC<VPDTemporalAnalysisProps> = ({
     albahaca: {
       name: 'Albahaca',
       icon: '🌿',
-      color: '#22c55e', // Verde suave y natural
+      color: '#6EE7B7', // Verde suave y natural
       weeks: {
         0: { vpdRange: 'N/A', optimalMin: 0.5, optimalMax: 1.5, focus: 'Sin cultivo' },
         1: { vpdRange: '1.05-1.15', optimalMin: 1.05, optimalMax: 1.15, focus: 'Germinación albahaca' },
@@ -101,7 +101,7 @@ const VPDSmartAnalysis: React.FC<VPDTemporalAnalysisProps> = ({
     lechuga: {
       name: 'Lechuga',
       icon: '🥬',
-      color: '#8b5cf6', // Violeta suave y elegante
+      color: '#8B7CF6', // Violeta suave y elegante
       weeks: {
         0: { vpdRange: 'N/A', optimalMin: 0.5, optimalMax: 1.5, focus: 'Sin cultivo' },
         1: { vpdRange: '0.95-1.05', optimalMin: 0.95, optimalMax: 1.05, focus: 'Germinación lechuga' },
@@ -112,7 +112,7 @@ const VPDSmartAnalysis: React.FC<VPDTemporalAnalysisProps> = ({
     mixto: {
       name: 'Mixto',
       icon: '🌱',
-      color: '#f97316', // Naranja suave en lugar de rojo intenso
+      color: '#FB923C', // Naranja suave en lugar de rojo intenso
       weeks: {
         0: { vpdRange: 'N/A', optimalMin: 0.5, optimalMax: 1.5, focus: 'Sin cultivo' },
         1: { vpdRange: '1.00-1.10', optimalMin: 1.00, optimalMax: 1.10, focus: 'Establecimiento general' },
@@ -137,7 +137,7 @@ const VPDSmartAnalysis: React.FC<VPDTemporalAnalysisProps> = ({
       nightTemp: 'Variable',
       nightRH: 'Variable',
       nightVPD: 'N/A',
-      color: '#95a5a6'
+      color: '#94A3B8'
     },
     1: {
       name: 'Semana 1',
@@ -153,7 +153,7 @@ const VPDSmartAnalysis: React.FC<VPDTemporalAnalysisProps> = ({
       nightTemp: '22-23°C',
       nightRH: '60-65%',
       nightVPD: '0.90-1.10',
-      color: '#27ae60'
+      color: '#10B981'
     },
     2: {
       name: 'Semana 2',
@@ -169,7 +169,7 @@ const VPDSmartAnalysis: React.FC<VPDTemporalAnalysisProps> = ({
       nightTemp: '21-22°C',
       nightRH: '62-66%',
       nightVPD: '0.85-1.05',
-      color: '#f39c12'
+      color: '#F59E0B'
     },
     3: {
       name: 'Semana 3',
@@ -185,7 +185,7 @@ const VPDSmartAnalysis: React.FC<VPDTemporalAnalysisProps> = ({
       nightTemp: '20-21°C',
       nightRH: '64-68%',
       nightVPD: '0.80-1.00',
-      color: '#3498db'
+      color: '#3B82F6'
     }
   };
 
@@ -221,14 +221,14 @@ const VPDSmartAnalysis: React.FC<VPDTemporalAnalysisProps> = ({
     };
   }, [selectedIslands, islandCropTypes, islandWeekAssignments, cropTypeConfigs, weekConfigs]);
 
-  // Colores para cada isla
+  // Colores únicos para cada isla
   const islandColors = {
-    I1: '#27ae60',
-    I2: '#3498db',
-    I3: '#e74c3c',
-    I4: '#f39c12',
-    I5: '#9b59b6',
-    I6: '#1abc9c'
+    I1: '#8B7CF6', // Purple
+    I2: '#3B82F6', // Blue
+    I3: '#10B981', // Green
+    I4: '#F59E0B', // Orange
+    I5: '#EC4899', // Pink
+    I6: '#14B8A6'  // Teal
   };
 
   // Función para obtener ícono de isla
@@ -419,9 +419,9 @@ const VPDSmartAnalysis: React.FC<VPDTemporalAnalysisProps> = ({
                         style={{ 
                           '--crop-color': config.color,
                           '--crop-color-dark': getCropColorDark(config.color),
-                          borderColor: currentCropType === cropType ? config.color : '#e2e8f0',
+                          borderColor: currentCropType === cropType ? config.color : '#E2E8F0',
                           backgroundColor: currentCropType === cropType ? config.color : 'white',
-                          color: currentCropType === cropType ? 'white' : '#374151'
+                          color: currentCropType === cropType ? 'white' : '#334155'
                         } as React.CSSProperties}
                         title={config.name}
                       >
@@ -446,7 +446,7 @@ const VPDSmartAnalysis: React.FC<VPDTemporalAnalysisProps> = ({
                         style={{ 
                           '--crop-color': cropConfig.color,
                           '--crop-color-dark': getCropColorDark(cropConfig.color),
-                          borderColor: currentWeek === parseInt(week) ? cropConfig.color : '#e2e8f0',
+                          borderColor: currentWeek === parseInt(week) ? cropConfig.color : '#E2E8F0',
                           backgroundColor: currentWeek === parseInt(week) ? cropConfig.color : 'white',
                           color: currentWeek === parseInt(week) ? 'white' : '#374151'
                         } as React.CSSProperties}
@@ -746,7 +746,7 @@ const VPDSmartAnalysis: React.FC<VPDTemporalAnalysisProps> = ({
         <h4>{title}</h4>
         <ResponsiveContainer width="100%" height={350}>
           <ComposedChart data={weekData}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+            <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" />
             <XAxis 
               dataKey="time" 
               tick={{ fontSize: 10 }}
@@ -781,7 +781,7 @@ const VPDSmartAnalysis: React.FC<VPDTemporalAnalysisProps> = ({
                 <ReferenceLine 
                   yAxisId={yAxisId}
                   y={weekConfig.optimalMin} 
-                  stroke="#e67e22" 
+                  stroke="#FB923C" 
                   strokeDasharray="5 5" 
                   strokeWidth={2}
                   label={`VPD Min: ${weekConfig.optimalMin}`}
@@ -789,7 +789,7 @@ const VPDSmartAnalysis: React.FC<VPDTemporalAnalysisProps> = ({
                 <ReferenceLine 
                   yAxisId={yAxisId}
                   y={weekConfig.optimalMax} 
-                  stroke="#e67e22" 
+                  stroke="#FB923C" 
                   strokeDasharray="5 5" 
                   strokeWidth={2}
                   label={`VPD Max: ${weekConfig.optimalMax}`}
@@ -804,18 +804,18 @@ const VPDSmartAnalysis: React.FC<VPDTemporalAnalysisProps> = ({
                   orientation="right"
                   label={{ value: 'VPD (kPa)', angle: 90, position: 'insideRight' }}
                   domain={[0.5, 1.3]}
-                  tick={{ fontSize: 10, fill: '#e67e22' }}
+                  tick={{ fontSize: 10, fill: '#FB923C' }}
                   type="number"
                   scale="linear"
                   tickFormatter={(value) => value.toFixed(1)}
-                  axisLine={{ stroke: '#e67e22' }}
-                  tickLine={{ stroke: '#e67e22' }}
+                  axisLine={{ stroke: '#FB923C' }}
+                  tickLine={{ stroke: '#FB923C' }}
                 />
                 {/* Líneas VPD óptimas */}
                 <ReferenceLine 
                   yAxisId="vpdSecondary"
                   y={weekConfig.optimalMin} 
-                  stroke="#e67e22" 
+                  stroke="#FB923C" 
                   strokeDasharray="5 5" 
                   strokeWidth={2}
                   label={`VPD Min: ${weekConfig.optimalMin}`}
@@ -823,7 +823,7 @@ const VPDSmartAnalysis: React.FC<VPDTemporalAnalysisProps> = ({
                 <ReferenceLine 
                   yAxisId="vpdSecondary"
                   y={weekConfig.optimalMax} 
-                  stroke="#e67e22" 
+                  stroke="#FB923C" 
                   strokeDasharray="5 5" 
                   strokeWidth={2}
                   label={`VPD Max: ${weekConfig.optimalMax}`}
@@ -1186,7 +1186,6 @@ const VPDSmartAnalysis: React.FC<VPDTemporalAnalysisProps> = ({
     <div className="vpd-smart-analysis">
       <div className="analysis-header">
         <h2>🤖 AI Optimizer VPD - Recomendaciones Inteligentes</h2>
-        <p>Sistema de IA para análisis predictivo y optimización automática del VPD por cultivo</p>
       </div>
 
       {renderLocalControls()}
@@ -1200,7 +1199,7 @@ const VPDSmartAnalysis: React.FC<VPDTemporalAnalysisProps> = ({
         <div className="chart-container">
           <ResponsiveContainer width="100%" height={400}>
             <ComposedChart data={processedData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+              <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" />
               <XAxis 
                 dataKey="time" 
                 tick={{ fontSize: 12 }}
@@ -1239,14 +1238,14 @@ const VPDSmartAnalysis: React.FC<VPDTemporalAnalysisProps> = ({
               <ReferenceLine 
                 yAxisId="left"
                 y={currentWeekConfig.optimalMin} 
-                stroke="#27ae60" 
+                stroke="#10B981" 
                 strokeDasharray="5 5" 
                 label="Min Óptimo"
               />
               <ReferenceLine 
                 yAxisId="left"
                 y={currentWeekConfig.optimalMax} 
-                stroke="#27ae60" 
+                stroke="#10B981" 
                 strokeDasharray="5 5" 
                 label="Max Óptimo"
               />
@@ -1257,7 +1256,7 @@ const VPDSmartAnalysis: React.FC<VPDTemporalAnalysisProps> = ({
                 y1={currentWeekConfig.optimalMin}
                 y2={currentWeekConfig.optimalMax}
                 stroke="none"
-                fill="#27ae60"
+                fill="#10B981"
                 fillOpacity={0.1}
               />
 
@@ -1266,7 +1265,7 @@ const VPDSmartAnalysis: React.FC<VPDTemporalAnalysisProps> = ({
                 <Bar
                   yAxisId="right"
                   dataKey="totalConsumption"
-                  fill="#95a5a6"
+                  fill="#94A3B8"
                   fillOpacity={0.3}
                   name="Consumo Total"
                 />

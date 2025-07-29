@@ -29,14 +29,14 @@ const VPDEvolutionChart: React.FC<VPDEvolutionChartProps> = ({
   selectedPeriod,
   weekConfig
 }) => {
-  // Colores para cada isla
+  // Colores únicos para cada isla - Más contrastantes
   const islandColors = {
-    I1: '#27ae60',
-    I2: '#3498db',
-    I3: '#e74c3c',
-    I4: '#f39c12',
-    I5: '#9b59b6',
-    I6: '#1abc9c'
+    I1: '#8B7CF6', // Purple
+    I2: '#3B82F6', // Blue
+    I3: '#EF4444', // Red (cambiado de verde)
+    I4: '#F59E0B', // Orange
+    I5: '#EC4899', // Pink
+    I6: '#10B981'  // Green (cambiado de teal)
   };
 
   // Procesar datos según período seleccionado

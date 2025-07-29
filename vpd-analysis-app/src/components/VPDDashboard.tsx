@@ -114,11 +114,15 @@ const VPDDashboard: React.FC<VPDDashboardProps> = ({ data }) => {
         <div className="header-info">
           <span className="date-info">📅 {data.metadata.date}</span>
           <span className="records-info">📊 {data.metadata.totalRecords} registros</span>
-          <button className="config-toggle-header" onClick={toggleConfigPanel}>
-            ⚙️ Configurar Rangos VPD
-          </button>
         </div>
       </div>
+
+      {/* Botón flotante para abrir configuración */}
+      {!configPanelOpen && (
+        <button className="floating-config-button" onClick={toggleConfigPanel}>
+          ⚙️
+        </button>
+      )}
 
       {/* Sistema de pestañas */}
       <div className="tab-navigation">

@@ -1,5 +1,94 @@
 /* Global Styles for VPD Analysis App */
 
+:root {
+  /* Primary Purples (Sophisticated & Calming) */
+  --primary: #8B7CF6;
+  --primary-dark: #7C3AED;
+  --primary-light: #C4B5FD;
+  --primary-ultra-light: #EDE9FE;
+  
+  /* Secondary Oranges (Warm & Energetic) */
+  --secondary: #FB923C;
+  --secondary-dark: #EA580C;
+  --secondary-light: #FED7AA;
+  --secondary-ultra-light: #FEF3E2;
+  
+  /* Accent Greens (Natural & Fresh) */
+  --success: #6EE7B7;
+  --success-dark: #10B981;
+  --success-light: #D1FAE5;
+  --success-ultra-light: #ECFDF5;
+  
+  /* Warning & Error (Soft) */
+  --warning: #FCD34D;
+  --warning-dark: #F59E0B;
+  --error: #F87171;
+  --error-dark: #EF4444;
+  
+  /* Neutral Grays (Clean & Modern) */
+  --gray-50: #F8FAFC;
+  --gray-100: #F1F5F9;
+  --gray-200: #E2E8F0;
+  --gray-300: #CBD5E1;
+  --gray-400: #94A3B8;
+  --gray-500: #64748B;
+  --gray-600: #475569;
+  --gray-700: #334155;
+  --gray-800: #1E293B;
+  --gray-900: #0F172A;
+  
+  /* Island Color Palette (Soft & Harmonious) */
+  --island-1: #A78BFA;
+  --island-2: #7DD3FC;
+  --island-3: #86EFAC;
+  --island-4: #FCD34D;
+  --island-5: #F472B6;
+  --island-6: #34D399;
+  
+  /* Gradients */
+  --gradient-primary: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+  --gradient-secondary: linear-gradient(135deg, var(--secondary) 0%, var(--secondary-dark) 100%);
+  --gradient-success: linear-gradient(135deg, var(--success) 0%, var(--success-dark) 100%);
+  --gradient-header: linear-gradient(135deg, var(--primary-light) 0%, var(--secondary-light) 50%, var(--success-light) 100%);
+  
+  /* Shadows (Soft) */
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.07), 0 2px 4px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1), 0 4px 6px rgba(0, 0, 0, 0.05);
+  
+  /* Spacing (8px Grid System) */
+  --space-1: 0.25rem;  /* 4px */
+  --space-2: 0.5rem;   /* 8px */
+  --space-3: 0.75rem;  /* 12px */
+  --space-4: 1rem;     /* 16px */
+  --space-5: 1.25rem;  /* 20px */
+  --space-6: 1.5rem;   /* 24px */
+  --space-8: 2rem;     /* 32px */
+  --space-10: 2.5rem;  /* 40px */
+  
+  /* Border Radius */
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-full: 9999px;
+  
+  /* Typography */
+  --font-size-xs: 0.75rem;   /* 12px */
+  --font-size-sm: 0.875rem;  /* 14px */
+  --font-size-base: 1rem;    /* 16px */
+  --font-size-lg: 1.125rem;  /* 18px */
+  --font-size-xl: 1.25rem;   /* 20px */
+  --font-size-2xl: 1.5rem;   /* 24px */
+  --font-size-3xl: 1.875rem; /* 30px */
+  
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+}
+
 * {
   box-sizing: border-box;
   margin: 0;
@@ -8,10 +97,12 @@
 
 body {
   margin: 0;
-  font-family: 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+  font-family: 'Inter', 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background: #f0f2f5;
+  background: var(--gray-50);
+  color: var(--gray-900);
+  line-height: 1.6;
 }
 
 .App {
@@ -25,34 +116,36 @@ body {
 /* Chart containers */
 .chart-container {
   background: white;
-  margin: 20px 0;
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  margin: var(--space-5) 0;
+  padding: var(--space-5);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--gray-200);
 }
 
 .chart-container h3 {
-  margin: 0 0 20px 0;
-  color: #2c3e50;
-  font-size: 18px;
-  font-weight: 600;
+  margin: 0 0 var(--space-5) 0;
+  color: var(--gray-800);
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
   text-align: center;
 }
 
 .chart-header {
   text-align: center;
-  margin-bottom: 30px;
+  margin-bottom: var(--space-8);
 }
 
 .chart-header h2 {
-  color: #2c3e50;
-  margin-bottom: 10px;
-  font-size: 24px;
+  color: var(--gray-800);
+  margin-bottom: var(--space-3);
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-semibold);
 }
 
 .chart-header p {
-  color: #666;
-  font-size: 14px;
+  color: var(--gray-600);
+  font-size: var(--font-size-sm);
 }
 
 /* Chart Summary */
@@ -94,9 +187,9 @@ body {
   font-size: 13px;
 }
 
-.stat-good { color: #27ae60; font-weight: bold; }
-.stat-warning { color: #f39c12; font-weight: bold; }
-.stat-error { color: #e74c3c; font-weight: bold; }
+.stat-good { color: var(--success-dark); font-weight: var(--font-weight-semibold); }
+.stat-warning { color: var(--warning-dark); font-weight: var(--font-weight-semibold); }
+.stat-error { color: var(--error-dark); font-weight: var(--font-weight-semibold); }
 
 /* Tooltip styles */
 .custom-tooltip {
@@ -134,22 +227,26 @@ body {
 
 .analysis-header {
   text-align: center;
-  margin-bottom: 30px;
-  padding: 20px;
-  background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
-  color: white;
-  border-radius: 8px;
+  margin-bottom: var(--space-6);
+  padding: var(--space-4) var(--space-6);
+  background: white;
+  color: var(--gray-900);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--gray-200);
+  box-shadow: var(--shadow-sm);
 }
 
 .analysis-header h2 {
-  margin: 0 0 10px 0;
-  font-size: 28px;
+  margin: 0;
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-semibold);
 }
 
 .analysis-header p {
   margin: 0;
   opacity: 0.9;
-  font-size: 16px;
+  font-size: var(--font-size-sm);
+  color: var(--gray-600);
 }
 
 .summary-table {
